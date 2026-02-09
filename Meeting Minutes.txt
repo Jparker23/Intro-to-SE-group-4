@@ -1,0 +1,82 @@
+Meeting Minutes
+1-27-26
+Attendees - Jack, AJ, Maddie
+Duration: 1 hour
+
+What was discussed:
+- Read through project description 
+- Looked at what an e-commerce platform needs to do
+- Discussed how to handle payment
+
+What was decided:
+- Making a website not a phone app
+- We are going to use PayPal and Shop for payment handling
+- We need a login system, a search system, shopping cart, inventory, and checkout system
+
+What needs to be done:
+AJ - Look up what security stuff is needed
+Jack - Figure out how databases look
+Maddie - Get a list of features needed in the SRS
+
+1-29-26
+Attendees - Jack, AJ, Maddie
+Duration: 1.5 hours
+
+What was discussed:
+- Everyone shared their research
+- Looked at SRS example document to figure out formatting
+- Made a list of the 6 main features (User login, Browsing products, Shopping cart/checkout, returns, inventory management, and admin controls)
+- Looked at what functional requirements were needed
+
+What was decided:
+- Admins have to approve products before they're published
+- Returns should follow seller's rules
+- We should support 100 users
+
+What needs to be done:
+AJ - Introduction and Overall Description sections
+Jack - Section 5
+Maddie - Section 4
+All - Section 3
+
+2-2-26
+Attendees - Jack, AJ, Maddie
+Duration: 1 hour
+
+What was discussed:
+- Read through everyone's sections
+- Found issues on wording
+- Some sections were two vague
+- Functional requirements weren't numbered correctly
+- Started talking about user stories and looked at examples
+
+What was decided:
+- Security section needs to be more detailed
+- Start on user stories
+- Revise sections for vagueness
+
+What needs to be done:
+AJ - User stories 12-21 and recheck numbering
+Jack -  User stories 22-33 and make security section more detailed
+Maddie - User stories 1-11 and recheck sections for vagueness
+
+2-5-26
+Attendees - Jack, AJ, Maddie
+Duration: 1 hour
+
+What was discussed:
+- Looked at user stories
+- Fixed a few mistakes
+- Started planning Sprint 2
+- Figuring out what technologies we are going to be used
+
+What was decided:
+- Research the different diagrams for Sprint 2
+- Polish Sprint 1 for final turn in
+- Research technologies we could use
+
+What needs to be done:
+AJ - Revise Introduction and Overall Description and user stories
+Jack - Revise Sections 4 and 5 and user stories
+Maddie - Revise Section 3 and user stories
+All - research technologies and diagrams for Sprint 2

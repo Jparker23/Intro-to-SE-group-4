@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inventory — Amplify{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="mb-0">Inventory</h2>
+    <small class="text-muted">100 items across all categories</small>
+  </div>
+  <a href="#" class="btn btn-danger">+ Add Item</a>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <h4 class="mb-0">100</h4>
+      <small class="text-muted">Total Listings</small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <h4 class="mb-0">$12,440</h4>
+      <small class="text-muted">Inventory Value</small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <h4 class="mb-0 text-warning">3</h4>
+      <small class="text-muted">Low Stock</small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <h4 class="mb-0 text-success">18</h4>
+      <small class="text-muted">Sold This Month</small>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+  <div class="card-body d-flex gap-2 flex-wrap">
+    <input type="text" class="form-control w-auto flex-grow-1" placeholder="Search by title, artist, SKU...">
+    <select class="form-select w-auto">
+      <option>All Categories</option>
+      <option>Vinyl</option>
+      <option>CDs</option>
+      <option>Amps & Gear</option>
+      <option>Cassette Tapes</option>
+      <option>Merch</option>
+    </select>
+    <select class="form-select w-auto">
+      <option>All Stock</option>
+      <option>In Stock</option>
+      <option>Low Stock</option>
+      <option>Out of Stock</option>
+    </select>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Title</th>
+          <th>Artist / Brand</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Condition</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Kind of Blue</td>
+          <td class="text-muted">Miles Davis</td>
+          <td><span class="badge bg-dark">Vinyl</span></td>
+          <td>$34.99</td>
+          <td><span class="badge bg-success">6</span></td>
+          <td>NM</td>
+          <td>
+            <a href="#" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
+          </td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Rumours</td>
+          <td class="text-muted">Fleetwood Mac</td>
+          <td><span class="badge bg-dark">Vinyl</span></td>
+          <td>$28.50</td>
+          <td><span class="badge bg-warning text-dark">2</span></td>
+          <td>VG+</td>
+          <td>
+            <a href="#" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
+          </td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>OK Computer</td>
+          <td class="text-muted">Radiohead</td>
+          <td><span class="badge bg-primary">CD</span></td>
+          <td>$12.00</td>
+          <td><span class="badge bg-success">11</span></td>
+          <td>New</td>
+          <td>
+            <a href="#" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
+          </td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>Nevermind</td>
+          <td class="text-muted">Nirvana</td>
+          <td><span class="badge bg-primary">CD</span></td>
+          <td>$10.50</td>
+          <td><span class="badge bg-danger">0</span></td>
+          <td>New</td>
+          <td>
+            <a href="#" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
+          </td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>Fender Blues Jr IV</td>
+          <td class="text-muted">Fender</td>
+          <td><span class="badge bg-danger">Amp</span></td>
+          <td>$749.00</td>
+          <td><span class="badge bg-warning text-dark">1</span></td>
+          <td>New</td>
+          <td>
+            <a href="#" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <small class="text-muted">Showing 1–5 of 100 items</small>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item disabled"><a class="page-link" href="#">‹</a></li>
+        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+        <li class="page-item"><a class="page-link" href="#">2</a></li>
+        <li class="page-item"><a class="page-link" href="#">3</a></li>
+        <li class="page-item"><a class="page-link" href="#">›</a></li>
+      </ul>
+    </nav>
+  </div>
+</div>
+{% endblock %}

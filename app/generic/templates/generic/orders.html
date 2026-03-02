@@ -1,0 +1,16 @@
+{% extends "generic/base.html" %}
+{% block title %}My Orders{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <h2>Placed Orders</h2>
+  <p>Order history for sellers</p>
+
+  <div class="card p-3 mb-3">Orders that have been placed</div>
+
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'account' %}">Back to account dshbd</a>
+    <a class="btn btn-primary" href="/api/returns/request/">Request a return</a>
+ <!--need to add in specfic return logic for order return selection-->
+</div>
+</div>
+{% endblock %}

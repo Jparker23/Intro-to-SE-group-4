@@ -1,0 +1,13 @@
+{% extends "generic/base.html" %}
+{% block title %}Returns{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <h2>Returns</h2>
+  <p>Return requests and statuses </p>
+  <div class="card p-3 mb-3">Return requests list</div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'account' %}">Back to account</a>
+    <a class="btn btn-primary" href="/api/returns/request/">Request a return</a>
+  </div>
+</div>
+{% endblock %}

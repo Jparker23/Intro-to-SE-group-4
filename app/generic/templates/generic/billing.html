@@ -1,0 +1,13 @@
+{% extends "generic/base.html" %}
+{% block title %}Billing{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <h2>Billing Information</h2>
+  <p>Add / update billing details here.</p>
+  <div class="card p-3 mb-3">Payment method</div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="/api/checkout/">Back to checkout</a>
+    <a class="btn btn-primary" href="/api/order-confirmation/">Place order</a>
+  </div>
+</div>
+{% endblock %}

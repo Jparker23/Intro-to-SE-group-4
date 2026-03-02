@@ -1,65 +1,53 @@
-from django.shortcuts import render, redirect, get_object_or_404
-
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from .models import Product
-from .serializers import ProductSerializer
+from django.shortcuts import render,redirect 
 from .forms import ProductForm
-from rest_framework.permissions import SAFE_METHODS
-from .permissions import IsSellerAndOwnerOrReadOnly
-from rest_framework.viewsets import ModelViewSet
+#this page is pretty much all render requests to load my HTML templates and returns a HttpResponse
 
 
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def products_list(request):
-    qs = Product.objects.filter(approval_status="Approved").order_by("id")
+def home(request):
+    return render(request, "generic/home.html")
 
-    q = request.query_params.get("q")
-    if q:
-        qs = qs.filter(name__icontains=q)
-
-    return Response(ProductSerializer(qs, many=True).data)
+def brandResults(request, brand):
+    return render(request, "generic/brandResults.html", {"brand": brand})
+def catalog(request):
+    return render(request, "generic/catalog.html")
 
 
+def adminModeration(request):
+    return render(request, "generic/adminModeration.html")
 
-def create_product(request):
-    if request.method == "POST":
+
+def billing(request):
+    return render(request, "generic/billing.html")
+
+def orderConf(request):
+    return render(request, "generic/orderConf.html")
+
+
+def orders(request):
+    return render(request, "generic/orders.html")
+
+def addresses(request):
+    return render(request, "generic/addresses.html")
+
+def returnReq(request):
+    return render(request, "generic/returnReq.html")
+
+def returns(request):
+    return render(request, "generic/returns.html")
+
+
+
+def createProd(request):
+    if request.method == 'POST':
         form = ProductForm(request.POST)
         if form.is_valid():
+            # Check whether it's valid and save the data
             form.save()
-            return redirect("product_list")
+            #html page for sellers will be created then linked to this
+            return redirect('')
     else:
+        # any other request method creates an empty form
         form = ProductForm()
-
-    return render(request, "shop/product_form.html", {"form": form})
-
-
-def update_product(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-
-    if request.method == "POST":
-        form = ProductForm(request.POST, instance=product)
-        if form.is_valid():
-            form.save()
-            return redirect("product_list")
-    else:
-        form = ProductForm(instance=product)
-
-    return render(request, "shop/product_form.html", {"form": form})
-
-class ProductViewSet(ModelViewSet):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-
-    def get_permissions(self):
-        # Anyone can browse products (GET/HEAD/OPTIONS)
-        if self.request.method in SAFE_METHODS:
-            return [AllowAny()]
-        # Only sellers can POST/PUT/PATCH/DELETE
-        return [IsSellerAndOwnerOrReadOnly()]
-
-    def perform_create(self, serializer):
-        # Force seller = logged-in seller (prevents spoofing)
-        serializer.save(seller=self.request.user)
+        
+    # pull up html page- needs to be named
+    return render(request, '', {'form': form})

@@ -1,0 +1,14 @@
+{% extends "generic/base.html" %}
+{% block title %}Request Return{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <h2>Request a Return</h2>
+  <p>Submit a return request for a order </p>
+  <div class="card p-3 mb-3">Return request form that needs to be filled out</div>
+  <div class="d-flex gap-2">
+    <!--need to add some info about return policies per seller!-->
+    <a class="btn btn-outline-secondary" href="/api/orders/">Back to orders</a>
+    <a class="btn btn-primary" href="/api/returns/">Submit</a>
+  </div>
+</div>
+{% endblock %}

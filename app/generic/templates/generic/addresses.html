@@ -1,0 +1,11 @@
+{% extends "generic/base.html" %}
+{% block title %}Addresses{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <h2>Addresses</h2>
+  <p> shipping addresses for buyers</p>
+  <div class="card p-3 mb-3">saved list of addresses</div>
+  <div class="card p-3 mb-3">Add or edit addresses</div>
+  <a class="btn btn-outline-secondary"href="{% url 'account' %}">Back to account dashboard</a>
+</div>
+{% endblock %}

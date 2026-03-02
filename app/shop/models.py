@@ -1,12 +1,13 @@
 from django.db import models
 from django.conf import settings
-
+#this is like the DB generator
     
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
-        return 
+        return self.name
+    
 class Product(models.Model):
     seller = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE, related_name="products")
     category = models.ForeignKey(Category,on_delete=models.SET_NULL, null=True,blank=True)
@@ -21,14 +22,16 @@ class Product(models.Model):
         ("Rejected", "Rejected"),
     ]
 
+    is_approved = models.BooleanField(default=False) #default stays not approved
+    prod_created_at= models.DateTimeField(auto_now_add= True)
     approval_status = models.CharField(
         max_length=10,
         choices=APPROVAL_STATUS,
         default="Pending"
     )
 
-    def __str__(self):
-        return self.name
+    def __str__(self) -> str:
+        return f"{self.name} ({self.seller_id})"
 
 
 class Cart(models.Model):
@@ -170,7 +173,4 @@ class AdminLog(models.Model):
     def __str__(self):
         return f"{self.timestamp} - {self.action_type}"
     
-
-
-        
 

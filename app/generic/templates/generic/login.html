@@ -1,0 +1,28 @@
+{% extends "generic/base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+
+<!--need to make this look better, possibly add a reset password page?-->
+
+
+<div class="login-container text-center">
+  <h2 class="text-center mb-3">Welcome Back!</h2>
+
+    <div class="form-group  mb-3">
+      <label>Username</label>
+      <input type="text" name="username" required>
+    </div>
+
+    <div class="form-group  mb-3">
+      <label>Password</label>
+      <input type="password" name="password" required>
+    </div>
+
+    <button type="submit">Login</button>
+    <a class="btn btn-primary mt-3" href="{% url 'register' %}">or register for an account!</a>
+  </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "generic/base.html" %}
+{% block title %}Order Confirmation{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <h2>Order Confirmation</h2>
+  <p>Order placed success</p>
+  <div class="card p-3 mb-3">Order summary placeholder</div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="/api/home/">Back home</a>
+    <a class="btn btn-primary" href="/api/orders/">View orders placed</a>
+  </div>
+</div>
+{% endblock %}

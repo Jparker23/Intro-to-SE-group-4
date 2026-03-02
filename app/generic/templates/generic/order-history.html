@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order History - My Store</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f3f3f3;
+    }
+
+    header {
+      background-color: #232f3e;
+      color: white;
+      padding: 1em;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.5em;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: auto;
+      padding: 2em;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2em;
+    }
+
+    /* Order List */
+    #order-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1em;
+    }
+
+    .order-card {
+      background-color: white;
+      padding: 1em;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .order-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3em;
+    }
+
+    .order-info p {
+      margin: 0;
+      color: #555;
+    }
+
+    .order-card button {
+      background-color: #f0c14b;
+      border: 1px solid #a88734;
+      padding: 0.5em 1em;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    /* Order Details */
+    #order-details {
+      background-color: white;
+      padding: 1em;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    #order-details h2 {
+      margin-top: 0;
+    }
+
+    #order-details p {
+      margin: 0.5em 0;
+    }
+
+    #order-details ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #order-details li {
+      border-bottom: 1px solid #ddd;
+      padding: 0.5em 0;
+    }
+
+    footer {
+      background-color: #232f3e;
+      color: white;
+      text-align: center;
+      padding: 1em;
+      margin-top: 2em;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>My Orders</h1>
+</header>
+
+<main>
+  <!-- Order List -->
+  <section id="order-list">
+    <div class="order-card">
+      <div class="order-info">
+        <p><strong>Order #12345</strong></p>
+        <p>Date: 02/28/2026</p>
+        <p>Total: $129.97</p>
+      </div>
+      <button>View Details</button>
+    </div>
+
+    <div class="order-card">
+      <div class="order-info">
+        <p><strong>Order #12346</strong></p>
+        <p>Date: 02/25/2026</p>
+        <p>Total: $59.99</p>
+      </div>
+      <button>View Details</button>
+    </div>
+
+    <!-- Add more orders here -->
+  </section>
+
+  <!-- Order Details -->
+  <section id="order-details">
+    <h2>Order Details</h2>
+    <p><strong>Shipping Status:</strong> Shipped</p>
+    <ul>
+      <li>Item 1 - $29.99</li>
+      <li>Item 2 - $49.99</li>
+      <li>Item 3 - $49.99</li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  &copy; 2026 Amplify Music Store
+</footer>
+
+</body>
+</html>

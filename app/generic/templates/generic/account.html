@@ -7,9 +7,10 @@
   <p>Buyer account dashboard</p>
 
   <div class="list-group">
-    <a class="list-group-item list-group-item-action" href="/api/orders/">My Orders</a>
-    <a class="list-group-item list-group-item-action" href="/api/addresses/">Addresses</a>
-    <a class="list-group-item list-group-item-action" href="/api/returns/">Returns</a>
+    <a class="list-group-item list-group-item-action" href="{% url 'orders' %}">My Orders</a>
+    <a class="list-group-item list-group-item-action" href="{% url 'addresses' %}">Saved Addresses</a>
+    <a class="list-group-item list-group-item-action" href="{% url 'billing' %}">Saved Billing Information</a>
+    <a class="list-group-item list-group-item-action" href="{% url 'returns' %}">Returns</a>
     <a class="btn btn-outline-danger" href="{% url 'logout' %}">Logout</a>
   </div>
 </div>

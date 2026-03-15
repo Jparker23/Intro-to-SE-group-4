@@ -5,7 +5,7 @@
 
 {% block body %}
 <!-- CSS -->
-	<link rel="stylesheet" href="{% static 'generic/css/home.css' %}">
+<link rel="stylesheet" href="{% static 'generic/css/home.css' %}">
 
 <!--This is the icon to open the sidebar-->
 <div class="menuIcon" onclick="openNav()">
@@ -17,11 +17,11 @@
 <!--This is the sidebar-->
 <div id="productSideBar" class="sidenav">
   <div class="sidebarHdr">
-     <div class="d-flex justify-content-between align-items-center px-3">
-    <h2>Accessories & <br>Add-ons: </h2>
-    <button class="btn btn-sm btn-light" type="button" onclick="closeNav()" aria-label="Close menu">X</button>
-  </div>
+    <div class="d-flex justify-content-between align-items-center px-3">
+      <h2>Accessories & <br>Add-ons: </h2>
+      <button class="btn btn-sm btn-light" type="button" onclick="closeNav()" aria-label="Close menu">X</button>
     </div>
+  </div>
   
   <!--when one of these catagories are clicked it will send the user straight to the catalog page and adds filters-->
   <a href="/api/catalog/?category=Amps">Amps</a>
@@ -37,122 +37,108 @@
 <header class="py-3 position-relative">
   <h1 class="text-center m-0 title">Amplify</h1>
   
-  <!--Login Button and User icon-->
+  
+  <!--Redid the button top right of the page, if the user isnt logged in the login button will be there, if they are logged in it will be account-->
   <div class="topRight">
+    {% if request.user.is_authenticated %}
+    <a class="LoginContainer" href="{% url 'account' %}">
+      <i class="fa fa-user"></i>
+      <span>Account</span>
+    </a>
+    {% else %}
     <a class="LoginContainer" href="{% url 'login' %}">
       <i class="fa fa-user"></i>
       <span>Login</span>
     </a>
+    {% endif %}
     
-    <!--Account button and shopping cart button-->
     <div class="iconRow">
-      <a href="{% url 'account' %}" class="iconBtn"> <i class="fa fa-user-circle"></i></a>
-      <a href="/api/cart/" class="iconBtn"> <i class="fa fa-shopping-cart"> </i></a>
+      {% if request.user.is_authenticated %}
+      <a href="/api/cart/" class="iconBtn"><i class="fa fa-shopping-cart"></i></a>
+      {% else %}
+      <a href="#" class="iconBtn" onclick="cartLoginAlert(); return false;"> <i class="fa fa-shopping-cart"></i></a>
+      {% endif %}
     </div>
   </div>
-</header>
-
-<!--Search bar with magnifying glass button-->
-<div class="container my-3">
-  <div class="d-flex justify-content-center">
-    <div class="input-group search" style="max-width: 600px;">
-      <input class="form-control text-center" type="text" placeholder="Search" />
-      <button class="btn searchIcon" type= "button">
-        <i class="fa fa-search"></i>
-      </button>
-    </div>
-  </div>
-</div>
-
-
-
-<!--This is a horizontal bar with a scroll bar so users can scroll through certain brands-->
-<!--The seller labels in the url filter needs to be changed when sellers are put into the system
-maybe, some logic can be inplemented that sellers with the most sales could be shown on the bar,
-probably will depend on the amount of sellers.-->
-<div class="brandHdrContainer">
-  <div class="brandbar">
-    <!--brand looks a bit off, will fix later-->
-    <span class="logo">Brands:</span>
-    <a href="/api/catalog/?seller=Seller1">Seller1</a>
-    <a href="/api/catalog/?seller=Seller2">Seller2</a>
-    <a href="/api/catalog/?seller=Seller3">Seller3</a>
-    <a href="/api/catalog/?seller=Seller4">Seller4</a>
-    <a href="/api/catalog/?seller=Seller5">Seller5</a>
-    <a href="/api/catalog/?seller=Seller6">Seller6</a>
-    <a href="/api/catalog/?seller=Seller7">Seller7</a>
-    <a href="/api/catalog/?seller=Seller8">Seller8</a>
-    <a href="/api/catalog/?seller=Seller9">Seller9</a>
-    <a href="/api/catalog/?seller=Seller10">Seller10</a>
-    <a href="/api/catalog/?seller=Seller11">Seller11</a>
-    <a href="/api/catalog/?seller=Seller12">Seller12</a>
-    <a href="/api/catalog/?seller=Seller13">Seller13</a>
-    <a href="/api/catalog/?seller=Seller14">Seller14</a>
-    <a href="/api/catalog/?seller=Seller15">Seller15</a>
-    <a href="/api/catalog/?seller=Seller16">Seller16</a>
-    <a href="/api/catalog/?seller=Seller17">Seller17</a>
-    <a href="/api/catalog/?seller=Seller18">Seller18</a>
-  </div>
-</div>
-
-<!--This is the middle->bottom part of the page that shows featured products and shows a link to the whole catalog-->
-<div class="container py-3">
-  <div class="d-flex align-items-center justify-content-between">
-    <h3 class="m-0 prodPage">Featured Products</h3>
-    <a class="btn catalogButton" type= "button" href="/api/catalog/"> View full catalog</a>
-  </div>
-</div>
-
-<!--This shows four products that are "featured products"-->
-<div class="container pb-4">
-  <div class="row g-3">
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="card productCard h-100">
-        <div class="photoPlaceholder">Photo</div>
-        <div class="card-body">
-          <h5 class="productName">Product Name</h5>
-          <div class="productPrice">$0.00</div>
-          <p class="productDesc">description</p>
+  
+  <!--Search bar with magnifying glass button, that redirects user to the filter catalog page-->
+  <div class="container my-3">
+    <div class="d-flex justify-content-center">
+      <form method="get" action="/api/catalog/" style="max-width: 600px; width:100%;">
+        <div class="input-group search">
+          <input class="form-control text-center" type="text" name="query" placeholder="Search"/>
+          <button class="btn searchIcon" type="submit">
+            <i class="fa fa-search"></i>
+          </button>
         </div>
-      </div>
-    </div>
-    
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="card productCard h-100">
-        <div class="photoPlaceholder">Photo</div>
-        <div class="card-body">
-          <h4 class="productName">Product Name</h4>
-          <p class="productPrice">$0.00</p>
-          <p class="productDesc">description</p>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="card productCard h-100">
-        <div class="photoPlaceholder">Photo</div>
-        <div class="card-body">
-          <h4 class="productName">Product Name</h4>
-          <p class="productPrice">$0.00</p>
-          <p class="productDesc">description</p>
-        </div>
-      </div>
-    </div>
-    
-    
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="card productCard h-100">
-        <div class="photoPlaceholder">Photo</div>
-        <div class="card-body">
-          <h4 class="productName">Product Name</h4>
-          <p class="productPrice">$0.00</p>
-          <p class="productDesc">description</p>
-        </div>
-      </div>
+      </form>
     </div>
   </div>
-</div>
-<!--JS -->
-	<script src="{% static 'generic/js/home.js' %}"></script>
-
-{%endblock%}
+  
+  
+  
+  
+  <!--This is a horizontal bar with a scroll bar so users can scroll through certain brands-->
+  <!--The seller labels in the url filter needs to be changed when sellers are put into the system
+  maybe, some logic can be inplemented that sellers with the most sales could be shown on the bar,
+  probably will depend on the amount of sellers.-->
+  <div class="brandHdrContainer">
+    <div class="brandbar">
+      <!--brand looks a bit off, will fix later-->
+      <span class="logo">Brands:</span>
+      <a href="/api/catalog/?seller=Seller1">Seller1</a>
+      <a href="/api/catalog/?seller=Seller2">Seller2</a>
+      <a href="/api/catalog/?seller=Seller3">Seller3</a>
+      <a href="/api/catalog/?seller=Seller4">Seller4</a>
+      <a href="/api/catalog/?seller=Seller5">Seller5</a>
+      <a href="/api/catalog/?seller=Seller6">Seller6</a>
+      <a href="/api/catalog/?seller=Seller7">Seller7</a>
+      <a href="/api/catalog/?seller=Seller8">Seller8</a>
+      <a href="/api/catalog/?seller=Seller9">Seller9</a>
+      <a href="/api/catalog/?seller=Seller10">Seller10</a>
+      <a href="/api/catalog/?seller=Seller11">Seller11</a>
+      <a href="/api/catalog/?seller=Seller12">Seller12</a>
+      <a href="/api/catalog/?seller=Seller13">Seller13</a>
+      <a href="/api/catalog/?seller=Seller14">Seller14</a>
+      <a href="/api/catalog/?seller=Seller15">Seller15</a>
+      <a href="/api/catalog/?seller=Seller16">Seller16</a>
+      <a href="/api/catalog/?seller=Seller17">Seller17</a>
+      <a href="/api/catalog/?seller=Seller18">Seller18</a>
+    </div>
+  </div>
+  
+  <!--This is the middle->bottom part of the page that shows featured products and shows a button to the whole catalog-->
+  <div class="container py-3">
+    <div class="d-flex align-items-center justify-content-between">
+      <h3 class="m-0 prodPage">Featured Products</h3>
+      <a class="btn catalogButton" href="/api/catalog/">View full catalog</a>
+    </div>
+  </div>
+  
+  <!--This shows four products that are "featured products"-->
+  <div class="container pb-4">
+    <div class="row g-3">
+      {% for product in featured_products %}
+      <div class="col-12 col-md-6 col-lg-3">
+        <a href="{% url 'product_detail' product.id %}" class="text-decoration-none text-dark">
+          <div class="card productCard h-100">
+            <div class="photoPlaceholder">Photo</div>
+            <div class="card-body">
+              <h5 class="productName">{{ product.name }}</h5>
+              <div class="productPrice">${{ product.price }}</div>
+              <p class="productDesc">{{ product.description }}</p>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% empty %}
+      <div class="col-12">
+        <div class="alert alert-warning">No featured products available.</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <!--JS -->
+  <script src="{% static 'generic/js/home.js' %}"></script>
+  
+  {%endblock%}

@@ -1,160 +1,126 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Comparison - My Store</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f3f3f3;
-    }
+{% extends "generic/base.html" %}
+<!-- couldnt keep hardcoded html page but still tried to keep the similar structure! -->
+{% load static %}
+{% block title %}Compare Products{% endblock %}
 
-    header {
-      background-color: #232f3e;
-      color: white;
-      padding: 1em;
-      text-align: center;
-    }
+{% block body %}
+<link rel="stylesheet" href="{% static 'generic/css/home.css' %}">
 
-    header h1 {
-      margin: 0;
-      font-size: 1.5em;
-    }
+<!--Reworked to make the comparison page match the home/catalog style-->
+<header class="py-3 position-relative">
+  <h1 class="text-center m-0 title">Amplify</h1>
 
-    main {
-      max-width: 1200px;
-      margin: auto;
-      padding: 2em;
-    }
+  <div class="topRight">
+    {% if request.user.is_authenticated %}
+      <a class="LoginContainer" href="{% url 'account' %}">
+        <i class="fa fa-user"></i>
+        <span>Account</span>
+      </a>
+    {% else %}
+      <a class="LoginContainer" href="{% url 'login' %}">
+        <i class="fa fa-user"></i>
+        <span>Login</span>
+      </a>
+    {% endif %}
 
-    /* Comparison Table */
-    #comparison-table {
-      overflow-x: auto;
-      background-color: white;
-      padding: 1em;
-      border-radius: 5px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      margin-bottom: 2em;
-    }
+    <div class="iconRow">
+      {% if request.user.is_authenticated %}
+        <a href="{% url 'account' %}" class="iconBtn"><i class="fa fa-user-circle"></i></a>
+      {% else %}
+        <a href="{% url 'login' %}" class="iconBtn"><i class="fa fa-user-circle"></i></a>
+      {% endif %}
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 600px;
-    }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 0.8em;
-      text-align: center;
-    }
-
-    th {
-      background-color: #f0f0f0;
-      font-weight: bold;
-    }
-
-    td img {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 5px;
-    }
-
-    /* Action Buttons */
-    #comparison-actions {
-      display: flex;
-      gap: 1em;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    #comparison-actions button {
-      padding: 0.8em 1.5em;
-      font-size: 1em;
-      border-radius: 3px;
-      border: 1px solid #a88734;
-      background-color: #f0c14b;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    #comparison-actions button:hover {
-      background-color: #e2b33c;
-    }
-
-    footer {
-      background-color: #232f3e;
-      color: white;
-      text-align: center;
-      padding: 1em;
-      margin-top: 2em;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      table, th, td {
-        font-size: 0.9em;
-      }
-      td img {
-        width: 80px;
-        height: 80px;
-      }
-    }
-  </style>
-</head>
-<body>
-
-<header>
-  <h1>Compare Products</h1>
+      {% if request.user.is_authenticated %}
+        <a href="/api/cart/" class="iconBtn"><i class="fa fa-shopping-cart"></i></a>
+      {% else %}
+        <a href="#" class="iconBtn" onclick="cartLoginAlert(); return false;"><i class="fa fa-shopping-cart"></i></a>
+      {% endif %}
+    </div>
+  </div>
 </header>
 
-<main>
-  <!-- Comparison Table -->
-  <section id="comparison-table">
-    <table>
+<!-- optional search bar to keep same site feel -->
+<div class="container my-3">
+  <div class="d-flex justify-content-center">
+    <form method="get" action="/api/catalog/" style="max-width: 600px; width:100%;">
+      <div class="input-group search">
+        <input class="form-control text-center" type="text" name="query" placeholder="Search">
+        <button class="btn searchIcon" type="submit">
+          <i class="fa fa-search"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="container py-3">
+  <div class="d-flex align-items-center justify-content-between">
+    <h3 class="m-0 prodPage">Compare Products</h3>
+    <a class="btn catalogButton" href="/api/catalog/">Back to Catalog</a>
+  </div>
+</div>
+
+<div class="container pb-4">
+  {% if products %} <!--product table-->
+  <div class="table-responsive bg-white p-3 rounded shadow-sm mb-4">
+    <table class="table table-bordered align-middle text-center">
       <tr>
         <th>Product</th>
+        {% for product in products %}
         <td>
-          <img src="https://via.placeholder.com/100" alt="Product 1">
-          <p>Product 1</p>
+          <div class="photoPlaceholder mb-2">Photo</div>
+          <p class="mb-2">{{ product.name }}</p>
+
+          <!--add to cart button-->
+          {% if request.user.is_authenticated %}
+          <form method="post" action="{% url 'cart:add_to_cart' product.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="quantity" value="1">
+            <button class="btn btn-sm btn-primary" type="submit">Add to Cart</button>
+          </form>
+          {% else %}
+          <button class="btn btn-sm btn-primary" type="button" onclick="cartLoginAlert(); return false;">
+            Add to Cart
+          </button>
+          {% endif %}
         </td>
-        <td>
-          <img src="https://via.placeholder.com/100" alt="Product 2">
-          <p>Product 2</p>
-        </td>
+        {% endfor %}
       </tr>
+
       <tr>
         <th>Price</th>
-        <td>$29.99</td>
-        <td>$49.99</td>
+        {% for product in products %}
+        <td>${{ product.price }}</td>
+        {% endfor %}
       </tr>
-      <tr>
-        <th>Condition</th>
-        <td>New</td>
-        <td>Used - Like New</td>
-      </tr>
+
       <tr>
         <th>Seller</th>
-        <td>Seller A</td>
-        <td>Seller B</td>
+        {% for product in products %}
+        <td>{{ product.seller.username }}</td>
+        {% endfor %}
+      </tr>
+
+      <tr>
+        <th>Category</th>
+        {% for product in products %}
+        <td>{{ product.category.name }}</td>
+        {% endfor %}
+      </tr>
+
+      <tr>
+        <th>Description</th>
+        {% for product in products %}
+        <td>{{ product.description }}</td>
+        {% endfor %}
       </tr>
     </table>
-  </section>
-
-  <!-- Comparison Actions -->
-  <section id="comparison-actions">
-    <button>Remove Selected</button>
-    <button>Add Selected to Cart</button>
-  </section>
-</main>
-
-<footer>
-  &copy; 2026 Amplify Music Store
-</footer>
-
-</body>
-</html>
+  </div>
+  {% else %}
+  <div class="alert alert-info text-center">No products selected to compare.</div>
+  <div class="text-center">
+    <a href="/api/catalog/" class="btn btn-primary">Return to Catalog</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

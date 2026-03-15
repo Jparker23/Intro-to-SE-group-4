@@ -1,3 +1,4 @@
+
 function openNav() {
   const sidebar = document.getElementById("productSideBar");
   const menu = document.querySelector(".menuIcon");
@@ -8,3 +9,4 @@ function closeNav() {
   document.getElementById("productSideBar")?.classList.remove("open");
   document.getElementById("sidebarOverlay")?.classList.remove("open");
 }
+

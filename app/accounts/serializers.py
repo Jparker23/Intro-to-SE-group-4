@@ -10,20 +10,17 @@ class RegisterSerializer(serializers.ModelSerializer):
     pswrdAgain = serializers.CharField(write_only=True, min_length=8)
     class Meta:
         model = User
-        fields = ("username", "email", "password", "pswrdAgain", "role")
+        fields = ("username", "first_name", "last_name", "email", "password", "pswrdAgain", "role")
 
 #make sure passwords match, validate the two passwords!
     def validate(self, attrs):
         if attrs["password"] != attrs["pswrdAgain"]:
-            raise serializers.ValidationError({"Passwords do not match."})
+            raise serializers.ValidationError("Passwords do not match.")
         return attrs
-#checks value, blocks any self made admins
-    def validate_role(self, value):
-        if value == "admin":
-            raise serializers.ValidationError("Admin accounts cannot be self-registered.")
-        return value
+
 #creates a new user object
     def create(self, validated_data):
+        validated_data.pop("pswrdAgain", None)
         password = validated_data.pop("password")
         user = User(**validated_data)
         #set_password will hash the password (was in SRS...im pretty sure)
@@ -36,3 +33,4 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "username", "email", "role")
+

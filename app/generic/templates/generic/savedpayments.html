@@ -1,21 +1,19 @@
 {% extends "generic/base.html" %}
-
-
 {% load static %}
 {% block title %}Saved Payment Methods{% endblock %}
 
 {% block body %}
 <link rel="stylesheet" href="{% static 'generic/css/home.css' %}">
-{% if errors.form %}
-<div class="alert alert-danger mb-3" role="alert">
-  {{ errors.form }}
-</div>
-{% endif %}
-
-
 
 <header class="py-3 position-relative">
   <h1 class="text-center m-0 title">Amplify</h1>
+
+  <div class="topRight">
+    <a class="LoginContainer" href="{% url 'account' %}">
+      <i class="fa fa-user"></i>
+      <span>Account</span>
+    </a>
+  </div>
 </header>
 
 <div class="container py-3">

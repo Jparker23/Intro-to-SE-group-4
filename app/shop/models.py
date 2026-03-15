@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from decimal import Decimal
 #this is like the DB generator
     
 class Category(models.Model):
@@ -7,6 +8,8 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+
     
 class Product(models.Model):
     seller = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE, related_name="products")
@@ -21,7 +24,7 @@ class Product(models.Model):
         ("Approved", "Approved"),
         ("Rejected", "Rejected"),
     ]
-
+    is_active = models.BooleanField(default=True)
     is_approved = models.BooleanField(default=False) #default stays not approved
     prod_created_at= models.DateTimeField(auto_now_add= True)
     approval_status = models.CharField(
@@ -31,7 +34,8 @@ class Product(models.Model):
     )
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.seller_id})"
+        return f"{self.name} ({self.seller.username})" 
+    
 
 
 class Cart(models.Model):
@@ -49,27 +53,31 @@ class CartItem(models.Model):
 
     class Meta:
         unique_together = ("cart", "product")
-
+    def total(self):
+        return self.product.price * self.quantity
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
     
 
+STATE_CHOICES = [("AL","Alabama"),("AK","Alaska"),("AZ","Arizona"),("AR","Arkansas"),("CA","California"),("CO","Colorado"),("CT","Connecticut"),("DE","Delaware"),("FL","Florida"),("GA","Georgia"),("HI","Hawaii"),("ID","Idaho"),("IL","Illinois"),("IN","Indiana"),("IA","Iowa"),("KS","Kansas"),("KY","Kentucky"),("LA","Louisiana"),("ME","Maine"),("MD","Maryland"),("MA","Massachusetts"),("MI","Michigan"),("MN","Minnesota"),("MS","Mississippi"),("MO","Missouri"),("MT","Montana"),("NE","Nebraska"),("NV","Nevada"),("NH","New Hampshire"),("NJ","New Jersey"),("NM","New Mexico"),("NY","New York"),("NC","North Carolina"),("ND","North Dakota"),("OH","Ohio"),("OK","Oklahoma"),("OR","Oregon"),("PA","Pennsylvania"),("RI","Rhode Island"),("SC","South Carolina"),("SD","South Dakota"),("TN","Tennessee"),("TX","Texas"),("UT","Utah"),("VT","Vermont"),("VA","Virginia"),("WA","Washington"),("WV","West Virginia"),("WI","Wisconsin"),("WY","Wyoming"),]
+
 class Address(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="addresses"
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="addresses")
 
     full_name = models.CharField(max_length=255)
     street = models.CharField(max_length=255)
     city = models.CharField(max_length=100)
-    state = models.CharField(max_length=100)
-    zip_code = models.CharField(max_length=20)
+    state = models.CharField(max_length=2, choices=STATE_CHOICES)
+    zipcode = models.CharField(max_length=20)
     country = models.CharField(max_length=100)
 
     is_default = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.name
+        return self.full_name
     
+
+   
     
 
 class Order(models.Model):
@@ -88,9 +96,9 @@ class Order(models.Model):
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Processing")
 
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    tax = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     
 
 
@@ -120,7 +128,6 @@ class Payment(models.Model):
     METHOD_CHOICES = [
         ("CreditCard", "CreditCard"),
         ("DebitCard", "DebitCard"),
-        ("Paypal", "Paypal"),
     ]
 
     STATUS_CHOICES = [
@@ -153,7 +160,7 @@ class ReturnRequest(models.Model):
     ]
 
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="Pending")
-    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -173,4 +180,15 @@ class AdminLog(models.Model):
     def __str__(self):
         return f"{self.timestamp} - {self.action_type}"
     
+#This is for any saved debit/credit cards that can be saved to the users account
+class SavedPaymentMethod(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_payment_methods")
+    cardholder_name = models.CharField(max_length=255)
+    card_brand = models.CharField(max_length=30, blank=True)
+    card_last4 = models.CharField(max_length=4)
+    exp_month = models.CharField(max_length=2)
+    exp_year = models.CharField(max_length=4)
+    is_default = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.card_brand} ending in {self.card_last4}"

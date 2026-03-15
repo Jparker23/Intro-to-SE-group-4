@@ -1,180 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Page - My Store</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f3f3f3;
-    }
+{% extends "generic/base.html" %}
+<!-- couldnt keep hardcoded html page but still tried to keep the similar structure! -->
+{% load static %}
+{% block title %}{{ product.name }}{% endblock %}
 
-    header {
-      background-color: #232f3e;
-      color: white;
-      padding: 1em;
-      text-align: center;
-    }
+{% block body %}
+<link rel="stylesheet" href="{% static 'generic/css/home.css' %}">
 
-    header h1 {
-      margin: 0;
-      font-size: 1.5em;
-    }
+<header class="py-3 position-relative">
+  
+  <div class="topRight">
+    {% if request.user.is_authenticated %}
+    <a class="LoginContainer" href="{% url 'account' %}"><i class="fa fa-user"></i><span>Account</span></a>
+    <a href="/api/cart/" class="iconBtn"><i class="fa fa-shopping-cart"></i></a>
+    {% else %}
+    <a class="LoginContainer" href="{% url 'login' %}"><i class="fa fa-user"></i><span>Login</span></a>
+    <a href="#" class="iconBtn" onclick="cartLoginAlert()"> <i class="fa fa-shopping-cart"></i></a>
+    {% endif %}
+    
 
-    main {
-      max-width: 1200px;
-      margin: auto;
-      padding: 2em;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2em;
-    }
-
-    /* Product Info */
-    #product-info {
-      background-color: white;
-      padding: 1.5em;
-      border-radius: 5px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    #product-info img {
-      width: 100%;
-      max-width: 300px;
-      border-radius: 5px;
-      margin-bottom: 1em;
-    }
-
-    #product-info h2 {
-      margin: 0.5em 0;
-      font-size: 1.5em;
-    }
-
-    #product-info p {
-      margin: 0.3em 0;
-      color: #555;
-    }
-
-    /* Product Actions */
-    #product-actions {
-      background-color: white;
-      padding: 1.5em;
-      border-radius: 5px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      gap: 1em;
-      align-items: center;
-    }
-
-    #product-actions input {
-      width: 60px;
-      padding: 0.5em;
-      text-align: center;
-    }
-
-    #product-actions button {
-      width: 80%;
-      padding: 0.8em;
-      font-size: 1em;
-      border-radius: 3px;
-      border: 1px solid #a88734;
-      background-color: #f0c14b;
-      cursor: pointer;
-    }
-
-    #product-actions button:hover {
-      background-color: #e2b33c;
-    }
-
-    /* Product Description */
-    #product-description {
-      grid-column: span 2;
-      background-color: white;
-      padding: 1.5em;
-      border-radius: 5px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      margin-top: 2em;
-    }
-
-    /* Seller Info */
-    #seller-info {
-      grid-column: span 2;
-      background-color: white;
-      padding: 1.5em;
-      border-radius: 5px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      margin-top: 2em;
-    }
-
-    footer {
-      background-color: #232f3e;
-      color: white;
-      text-align: center;
-      padding: 1em;
-      margin-top: 2em;
-    }
-
-    /* Responsive */
-    @media (max-width: 900px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-
-      #product-actions button {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
-<body>
-
-<header>
-  <h1>Product Page</h1>
+  </div>
 </header>
 
-<main>
-  <!-- Product Info -->
-  <section id="product-info">
-    <img src="https://via.placeholder.com/300" alt="Album Cover">
-    <h2>Album Title</h2>
-    <p>Artist: Artist Name</p>
-    <p>Price: $29.99</p>
-    <p>Condition: New</p>
-  </section>
-
-  <!-- Product Actions -->
-  <section id="product-actions">
-    <label for="quantity">Quantity:</label>
-    <input type="number" id="quantity" value="1" min="1">
-    <button>Add to Cart</button>
-    <button>Add to Compare</button>
-  </section>
-
-  <!-- Product Description -->
-  <section id="product-description">
-    <h2>Product Description</h2>
-    <p> This is a detailed description of the album, including tracklist, release date, and any other relevant details.</p>
-  </section>
-
-  <!-- Seller Info -->
-  <section id="seller-info">
-    <h2>Seller Information</h2>
-    <p>Seller: Music Store</p>
-    <p>Rating: ★★★★☆ (120 reviews)</p>
-  </section>
-</main>
-
-<footer>
-  &copy; 2026 Amplify Music Store
-</footer>
-
-</body>
-</html>
+<div class="container my-4">
+  <div class="row g-4">
+    <div class="col-md-6">
+      <section id="product-info" class="bg-white p-4 rounded shadow-sm h-100 text-center">
+        <div class="photoPlaceholder mb-3" style="min-height:300px;">Photo</div>
+        <h2>{{ product.name }}</h2>
+        <p>Artist / Brand: {{ product.seller.username }}</p>
+        <p>Price: ${{ product.price }}</p>
+        <p>Category: {{ product.category.name }}</p>
+      </section>
+    </div>
+    
+    <div class="col-md-6">
+      <section id="product-actions" class="bg-white p-4 rounded shadow-sm h-100">
+        {% if request.user.is_authenticated %}
+        <form method="post" action="{% url 'cart:add_to_cart' product.id %}">
+          {% csrf_token %}
+          <input type="number" name="quantity" value="1" min="1">
+          <button type="submit" class="btn btn-primary">Add to Cart</button>
+        </form>
+        {% else %}
+        <a href="{% url 'login' %}" class="btn btn-primary">Login to Add to Cart</a>
+        {% endif %}
+        
+      </section>
+    </div>
+    
+    <div class="col-12">
+      <section id="product-description" class="bg-white p-4 rounded shadow-sm">
+        <h2>Product Description</h2>
+        <p>{{ product.description }}</p>
+      </section>
+    </div>
+    
+    <div class="col-12">
+      <section id="seller-info" class="bg-white p-4 rounded shadow-sm">
+        <h2>Seller Information</h2>
+        <p>Seller: {{ product.seller.username }}</p>
+        <p>Category: {{ product.category.name }}</p>
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

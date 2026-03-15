@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from rest_framework import generics, permissions
-from django.contrib.auth import login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout
 from .serializers import RegisterSerializer, UserSerializer
 
 #POST request handler, used for user registration
@@ -25,19 +25,39 @@ def account(request):
     return render(request, "generic/account.html")
   
 def loginpg(request):
-    return render(request, "generic/login.html")
+    errors = {}
+
+    if request.method == "POST":
+        username = request.POST.get("username", "")
+        password = request.POST.get("password", "")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            auth_login(request, user)
+            return redirect("home")
+        else:
+            errors["login"] = "Invalid username or password."
+
+    return render(request, "generic/login.html", {"errors": errors})
 
 def logoutpg(request):
+    logout(request)
     return render(request, "generic/logout.html")
 
 def register(request):
+    errors = {}
+    data = {}
     if request.method == "POST":
-        data = { "username": request.POST.get("username", ""),
-            "email": request.POST.get("email", ""),
-            "role": request.POST.get("role", "buyer"),
-            "password": request.POST.get("password", ""),
-            "pswrdAgain": request.POST.get("pswrdAgain", ""),
+        data = {"username": request.POST.get("username", ""),
+                "first_name": request.POST.get("first_name", ""),
+                "last_name": request.POST.get("last_name", ""),
+                "email": request.POST.get("email", ""),
+                "role": request.POST.get("role", "buyer"),
+                "password": request.POST.get("password", ""),
+                "pswrdAgain": request.POST.get("pswrdAgain", ""),
         }
+       
         #seralizes collected data
         serializer = RegisterSerializer(data=data)
         #validation of data
@@ -46,6 +66,7 @@ def register(request):
             user = serializer.save()
             #new user logs in immediately
             auth_login(request, user) 
-            return redirect("/api/auth/account/")
-
-    return render(request, "generic/register.html")
+            return redirect("home")
+        print("REGISTER ERRORS:", serializer.errors)
+        errors = serializer.errors
+    return render(request, "generic/register.html", {"errors": errors, "data": data})

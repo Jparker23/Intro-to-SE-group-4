@@ -13,7 +13,7 @@ class IsSeller(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         #checks user is logged in, has a role, and that their product matches the correct seller
-        return bool(request.user and request.user.is_authenticated and getattr(request.user, "role", None) and obj.seller == request.user)
+        return bool(request.user and request.user.is_authenticated and getattr(request.user, "role", None) and obj.seller == request.user and obj.seller == request.user)
 
 
 class IsAdmin(BasePermission):

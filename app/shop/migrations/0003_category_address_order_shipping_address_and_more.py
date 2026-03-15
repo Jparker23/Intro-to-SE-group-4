@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ('street', models.CharField(max_length=255)),
                 ('city', models.CharField(max_length=100)),
                 ('state', models.CharField(max_length=100)),
-                ('zip_code', models.CharField(max_length=20)),
+                ('zipcode', models.CharField(max_length=20)),
                 ('country', models.CharField(max_length=100)),
                 ('is_default', models.BooleanField(default=False)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='addresses', to=settings.AUTH_USER_MODEL)),

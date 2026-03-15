@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'accounts',
     'shop',
+    'cart',
     
 ]
 
@@ -58,6 +59,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
+
+LOGIN_URL = "/api/auth/login/"
 
 TEMPLATES = [
     {
@@ -127,6 +130,7 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / "generic" / "static",]
 
 AUTH_USER_MODEL = "accounts.User"
+
 
 CORS_ALLOW_ALL_ORIGINS = True
 

@@ -1,170 +1,259 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checkout - My Store</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f3f3f3;
-    }
+{% extends "generic/base.html" %}
+<!-- reworked from static html, tried to keep the same style!!-->
+{% load static %}
+{% block title %}Checkout{% endblock %}
 
-    header {
-      background-color: #232f3e;
-      color: white;
-      padding: 1em;
-      text-align: center;
-    }
+{% block body %}
+<link rel="stylesheet" href="{% static 'generic/css/home.css' %}">
 
-    header h1 {
-      margin: 0;
-      font-size: 1.5em;
-    }
-
-    main {
-      max-width: 1000px;
-      margin: auto;
-      padding: 2em;
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-        gap: 2em;
-    }
-
-    /* Forms and Summary */
-    section {
-      background-color: white;
-      padding: 1.5em;
-      border-radius: 5px;
-      margin-bottom: 1.5em;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-      margin-top: 0;
-      margin-bottom: 1em;
-      font-size: 1.2em;
-      color: #232f3e;
-    }
-
-    label {
-      display: block;
-      margin-top: 0.5em;
-      margin-bottom: 0.2em;
-      font-weight: bold;
-    }
-
-    input {
-      width: 100%;
-      padding: 0.5em;
-      margin-bottom: 0.8em;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      box-sizing: border-box;
-    }
-
-    #order-summary {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5em;
-    }
-
-    #order-summary p {
-      margin: 0.5em 0;
-    }
-
-    #order-summary .total {
-      font-weight: bold;
-      font-size: 1.1em;
-    }
-
-    #checkout-action button {
-      width: 100%;
-      background-color: #f0c14b;
-      border: 1px solid #a88734;
-      padding: 1em;
-      font-size: 1em;
-      cursor: pointer;
-      border-radius: 3px;
-      margin-top: 1em;
-    }
-
-    /* Layout adjustments for checkout form sections */
-    #shipping-info, #payment-info {
-      margin-bottom: 1.5em;
-    }
-
-    /* Stack sections for smaller screens */
-    @media (max-width: 900px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
-</head>
-<body>
-
-<header>
-  <h1>Checkout</h1>
+<header class="py-3 position-relative">
+  
+  <div class="topRight">
+    {% if request.user.is_authenticated %}
+    <a class="LoginContainer" href="{% url 'account' %}">
+      <i class="fa fa-user"></i>
+      <span>Account</span>
+    </a>
+    {% else %}
+    <a class="LoginContainer" href="{% url 'login' %}">
+      <i class="fa fa-user"></i>
+      <span>Login</span>
+    </a>
+    {% endif %}
+    
+    
+  </div>
 </header>
 
-<main>
-  <!-- Left Column: Forms -->
-  <div>
-    <!-- Shipping Info -->
-    <section id="shipping-info">
-      <h2>Shipping Information</h2>
-      <label for="name">Full Name</label>
-      <input type="text" id="name" placeholder="John Doe">
-
-      <label for="address">Address</label>
-      <input type="text" id="address" placeholder="123 Main St">
-
-      <label for="city">City</label>
-      <input type="text" id="city" placeholder="Anytown">
-
-      <label for="state">State</label>
-      <input type="text" id="state" placeholder="CA">
-
-      <label for="zip">ZIP Code</label>
-      <input type="text" id="zip" placeholder="12345">
-    </section>
-
-    <!-- Payment Info -->
-    <section id="payment-info">
-      <h2>Payment Information</h2>
-      <label for="card-number">Card Number</label>
-      <input type="text" id="card-number" placeholder="1234 5678 9012 3456">
-
-      <label for="exp-date">Expiration Date</label>
-      <input type="text" id="exp-date" placeholder="MM/YY">
-
-      <label for="cvv">CVV</label>
-      <input type="text" id="cvv" placeholder="123">
-    </section>
+<div class="container py-3">
+  <div class="d-flex align-items-center justify-content-between">
+    <h3 class="m-0 prodPage">Checkout</h3>
+    <a class="btn catalogButton" href="{% url 'cart:cart_details' %}">Back to Cart</a>
   </div>
+</div>
 
-  <!-- Right Column: Order Summary -->
-  <div>
-    <section id="order-summary">
-      <h2>Order Summary</h2>
-      <p>Item 1 x 1 - $29.99</p>
-      <p>Item 2 x 2 - $99.98</p>
-      <p>Subtotal: $129.97</p>
-      <p>Estimated Tax: $10.40</p>
-      <p class="total">Total: $140.37</p>
-      <section id="checkout-action">
-        <button>Place Order</button>
-      </section>
-    </section>
-  </div>
-</main>
-
-<footer>
-  &copy; 2026 Amplify Music Store
-</footer>
-
-</body>
-</html>
+<div class="container pb-4">
+  <form method="post">
+    {% csrf_token %}
+    
+    {% if errors %}
+    <div class="alert alert-danger mb-3" role="alert">
+      Please fill out all required fields before placing your order.
+    </div>
+    {% endif %}
+    
+    <div class="row g-4">
+      <div class="col-lg-8">
+        
+        <section id="shipping-info" class="bg-white p-4 rounded shadow-sm mb-4">
+          <h2 class="h4 mb-3">Shipping Information</h2>
+          
+          <label class="form-label">Use Saved Address</label>
+          <select class="form-select mb-3" name="saved_address">
+            <option value="">Select saved address</option>
+            {% for address in saved_addresses %}
+            <option value="{{ address.id }}">
+              {{ address.full_name }} - {{ address.street }}, {{ address.city }}, {{ address.state }}
+            </option>
+            {% endfor %}
+          </select>
+          
+          <p class="small text-muted mb-3">Or enter a new address below.</p>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">First Name</label>
+              <input class="form-control" required type="text" name="first_name" value="{{ request.user.first_name }}">
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Last Name</label>
+              <input class="form-control" required type="text" name="last_name" value="{{ request.user.last_name }}" >
+            </div>
+            
+            <div class="col-12">
+              <label class="form-label">Street Address</label>
+              <input class="form-control" required type="text" name="street" placeholder="123 Your Street" >
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label">City</label>
+              <input class="form-control"required  type="text" name="city" placeholder="City" >
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label">State</label>
+              <select name="state" class="form-control" required>
+                <option value="">Select State</option>
+                <option value="AL">Alabama</option>
+                <option value="AK">Alaska</option>
+                <option value="AZ">Arizona</option>
+                <option value="AR">Arkansas</option>
+                <option value="CA">California</option>
+                <option value="CO">Colorado</option>
+                <option value="CT">Connecticut</option>
+                <option value="DE">Delaware</option>
+                <option value="FL">Florida</option>
+                <option value="GA">Georgia</option>
+                <option value="HI">Hawaii</option>
+                <option value="ID">Idaho</option>
+                <option value="IL">Illinois</option>
+                <option value="IN">Indiana</option>
+                <option value="IA">Iowa</option>
+                <option value="KS">Kansas</option>
+                <option value="KY">Kentucky</option>
+                <option value="LA">Louisiana</option>
+                <option value="ME">Maine</option>
+                <option value="MD">Maryland</option>
+                <option value="MA">Massachusetts</option>
+                <option value="MI">Michigan</option>
+                <option value="MN">Minnesota</option>
+                <option value="MS">Mississippi</option>
+                <option value="MO">Missouri</option>
+                <option value="MT">Montana</option>
+                <option value="NE">Nebraska</option>
+                <option value="NV">Nevada</option>
+                <option value="NH">New Hampshire</option>
+                <option value="NJ">New Jersey</option>
+                <option value="NM">New Mexico</option>
+                <option value="NY">New York</option>
+                <option value="NC">North Carolina</option>
+                <option value="ND">North Dakota</option>
+                <option value="OH">Ohio</option>
+                <option value="OK">Oklahoma</option>
+                <option value="OR">Oregon</option>
+                <option value="PA">Pennsylvania</option>
+                <option value="RI">Rhode Island</option>
+                <option value="SC">South Carolina</option>
+                <option value="SD">South Dakota</option>
+                <option value="TN">Tennessee</option>
+                <option value="TX">Texas</option>
+                <option value="UT">Utah</option>
+                <option value="VT">Vermont</option>
+                <option value="VA">Virginia</option>
+                <option value="WA">Washington</option>
+                <option value="WV">West Virginia</option>
+                <option value="WI">Wisconsin</option>
+                <option value="WY">Wyoming</option>
+              </select>
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label">ZIP Code</label>
+              <input type="text" name="zipcode" pattern="[0-9]{5}" maxlength="5" class="form-control" required placeholder= "12345">
+            </div>
+            
+            <div class="col-12">
+              <!--SRS states we are servicing USA only, so i locked the country in as the USA-->
+              <label>Country</label>
+              <input type="text" value="United States" class="form-control" readonly>
+              <input type="hidden" name="country" value="USA">
+            </div>
+          </div>
+          
+          <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" name="save_address" id="save_address">
+            <label class="form-check-label" for="save_address">
+              Save this address to my account
+            </label>
+          </div>
+        </section>
+        
+        
+        <section id="payment-info" class="bg-white p-4 rounded shadow-sm mb-4">
+          <h2 class="h4 mb-3">Payment Information</h2>
+          
+          <label class="form-label">Use Saved Payment Method</label>
+          <select class="form-select mb-3" name="saved_payment">
+            <option value="">Select saved payment method</option>
+            {% for payment in saved_payments %}
+            <option value="{{ payment.id }}">
+              {{ payment.card_brand }} ending in {{ payment.card_last4 }} ({{ payment.exp_month }}/{{ payment.exp_year }})
+            </option>
+            {% endfor %}
+          </select>
+          
+          <p class="small text-muted mb-3">Or enter a new card below.</p>
+          
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Cardholder Name</label>
+              <input class="form-control" required type="text" name="cardholder_name" value="{{ request.user.first_name }} {{ request.user.last_name }}" >
+            </div>
+            
+            <div class="col-12">
+              <label class="form-label" for="payment_method">Payment Method</label>
+              <select id="payment_method" name="payment_method" class="form-control" required>
+                <option value="">Select Payment Method</option>
+                <option value="CreditCard">Credit Card</option>
+                <option value="DebitCard">Debit Card</option>
+              </select>
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label">Card Brand</label>
+              <select class="form-select" required name="card_brand">
+                <option value="">Select brand</option>
+                <option value="Visa">Visa</option>
+                <option value="Mastercard">Mastercard</option>
+                <option value="Discover">Discover</option>
+                <option value="Amex">Amex</option>
+              </select>
+            </div>
+            
+            <div class="col-12">
+              <label class="form-label">Card Number</label>
+              <input class="form-control" required type="text" name="card_number" placeholder="1234 5678 9012 3456">
+            </div>
+            
+            
+            <div class="col-md-4">
+              <label class="form-label">Exp Month</label>
+              <input class="form-control" required type="text" name="exp_month" placeholder="MM">
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label">Exp Year</label>
+              <input class="form-control" required type="text" name="exp_year" placeholder="YYYY">
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label">CVV</label>
+              <input class="form-control" required type="text" name="cvv" placeholder="123">
+            </div>
+          </div>
+          
+          <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" name="save_payment" id="save_payment">
+            <label class="form-check-label" for="save_payment">
+              Save this payment method to my account
+            </label>
+          </div>
+        </section>
+      </div>
+      
+      <!-- Right Column -->
+      <div class="col-lg-4">
+        <section id="order-summary" class="bg-white p-4 rounded shadow-sm">
+          <h2 class="h4 mb-3">Order Summary</h2>
+          
+          {% for item in cart_items %}
+          <p class="mb-2">{{ item.product.name }} x {{ item.quantity }} - ${{ item.total|floatformat:2 }}</p>
+          {% empty %}
+          <p class="mb-2">No items in cart.</p>
+          {% endfor %}
+          
+          <hr>
+          <p class="mb-2">Subtotal: <strong>${{ subtotal|floatformat:2 }}</strong></p>
+          <p class="mb-2">Estimated Tax: <strong>${{ tax|floatformat:2 }}</strong></p>
+          <p class="mb-2">Shipping Fees: <strong>${{ fees|floatformat:2 }}</strong></p>
+          <p class="mb-3 fs-5">Total: <strong>${{ total|floatformat:2 }}</strong></p>
+          
+          
+          <button class="btn btn-primary w-100" type="submit">Place Order</button>
+        </section>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

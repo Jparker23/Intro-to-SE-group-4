@@ -4,9 +4,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
-from models import Product
-from serializers import ProductSerializer, ProductModerateSerializer
-from permissions import IsSeller, IsAdmin
+from .models import Product
+from .serializers import ProductSerializer, ProductModerateSerializer
+from .permissions import IsSeller, IsAdmin
 #This may be toooooo many includes.. need to figure out how to shorten this down
 
 class ProductViewSet(ModelViewSet):
@@ -38,11 +38,11 @@ class ProductViewSet(ModelViewSet):
        
         minPrice = self.request.GET.get("minPrice")
         if minPrice: 
-            qs=qs.filter(price_gte=minPrice)
+            qs=qs.filter(price__gte=minPrice)
 
         maxPrice = self.request.GET.get("maxPrice")
         if maxPrice: 
-            qs=qs.filter(price_lte=maxPrice)
+            qs=qs.filter(price__lte=maxPrice)
 
         return qs
 

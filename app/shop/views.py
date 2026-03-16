@@ -133,7 +133,7 @@ def createProd(request): #made this because I made a new-item page for sellers
             product.is_approved = False
             product.approval_status = "Pending" #product has to have admin approval
             # Check whether it's valid and save the data
-            form.save()
+            product.save()
             #html page for sellers will be created then linked to this
             return redirect('/api/inventory/')
     else:

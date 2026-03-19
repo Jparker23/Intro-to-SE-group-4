@@ -1,7 +1,7 @@
 {% extends "generic/base.html" %}
 {% load static %}
 
-{% block title %}{{ seller.name }} — Amplify{% endblock %}
+{% block title %}{{ seller.username }} — Amplify{% endblock %}
 
 {% block content %}
 
@@ -10,161 +10,45 @@
   <div class="card-body d-flex align-items-center gap-4">
     <img src="https://placehold.co/80x80" class="rounded-circle" alt="Seller avatar">
     <div>
-      <h3 class="mb-0">{{ seller.name|default:"Groove House Records" }}</h3>
-      <small class="text-muted">Austin, TX &nbsp;·&nbsp; Member since 2021 &nbsp;·&nbsp; 4.8 (132 reviews)</small>
-      <p class="mt-1 mb-0 text-muted small">Specializing in jazz, classic rock vinyl, and vintage gear. All items graded and shipped with care.</p>
+      <h3 class="mb-0">{{ seller.username }}</h3>
+      <small class="text-muted">Member since {{ seller.date_joined|date:"Y" }}</small>
     </div>
     <div class="ms-auto text-end">
-      <span class="badge bg-success mb-1">Ships Fast</span><br>
-      <small class="text-muted">100 listings</small>
+      <small class="text-muted">{{ products|length }} listings</small>
     </div>
   </div>
-</div>
-
-<!-- Filters -->
-<div class="d-flex gap-2 flex-wrap mb-4">
-  <input type="text" class="form-control w-auto flex-grow-1" placeholder="Search this store...">
-  <select class="form-select w-auto">
-    <option>All Categories</option>
-    <option>Vinyl</option>
-    <option>CDs</option>
-    <option>Amps & Gear</option>
-    <option>Cassette Tapes</option>
-    <option>Merch</option>
-  </select>
-  <select class="form-select w-auto">
-    <option>Sort: Newest</option>
-    <option>Sort: Price ↑</option>
-    <option>Sort: Price ↓</option>
-  </select>
 </div>
 
 <!-- Listings Grid -->
 <div class="row g-3">
-  
+  {% for product in products %}
   <div class="col-md-3 col-sm-6">
     <div class="card h-100">
-      <img src="https://placehold.co/300x300" class="card-img-top" alt="Kind of Blue">
       <div class="card-body">
-        <span class="badge bg-dark mb-1">Vinyl</span>
-        <h6 class="card-title mb-0">Kind of Blue</h6>
-        <small class="text-muted">Miles Davis</small>
+        <span class="badge bg-dark mb-1">{{ product.category }}</span>
+        <h6 class="card-title mb-0">{{ product.name }}</h6>
         <div class="d-flex justify-content-between align-items-center mt-2">
-          <strong>$34.99</strong>
-          <small class="text-muted">Cond: NM</small>
+          <strong>${{ product.price }}</strong>
+          {% if product.stock == 0 %}
+            <small class="text-danger">Out of stock</small>
+          {% else %}
+            <small class="text-muted">{{ product.stock }} left</small>
+          {% endif %}
         </div>
       </div>
       <div class="card-footer d-flex gap-2">
-        <a href="#" class="btn btn-danger btn-sm w-100">Add to Cart</a>
+        <a href="{% url 'product_detail' product.pk %}" class="btn btn-danger btn-sm w-100">View Item</a>
       </div>
     </div>
   </div>
-  
-  <div class="col-md-3 col-sm-6">
-    <div class="card h-100">
-      <img src="https://placehold.co/300x300" class="card-img-top" alt="Rumours">
-      <div class="card-body">
-        <span class="badge bg-dark mb-1">Vinyl</span>
-        <h6 class="card-title mb-0">Rumours</h6>
-        <small class="text-muted">Fleetwood Mac</small>
-        <div class="d-flex justify-content-between align-items-center mt-2">
-          <strong>$28.50</strong>
-          <small class="text-muted">Cond: VG+</small>
-        </div>
-      </div>
-      <div class="card-footer d-flex gap-2">
-        <a href="#" class="btn btn-danger btn-sm w-100">Add to Cart</a>
-      </div>
-    </div>
+  {% empty %}
+  <div class="col-12 text-center text-muted py-4">
+    This seller has no active listings.
   </div>
-  
-  <div class="col-md-3 col-sm-6">
-    <div class="card h-100">
-      <img src="https://placehold.co/300x300" class="card-img-top" alt="OK Computer">
-      <div class="card-body">
-        <span class="badge bg-primary mb-1">CD</span>
-        <h6 class="card-title mb-0">OK Computer</h6>
-        <small class="text-muted">Radiohead</small>
-        <div class="d-flex justify-content-between align-items-center mt-2">
-          <strong>$12.00</strong>
-          <small class="text-muted">Cond: New</small>
-        </div>
-      </div>
-      <div class="card-footer d-flex gap-2">
-        <a href="#" class="btn btn-danger btn-sm w-100">Add to Cart</a>
-      </div>
-    </div>
-  </div>
-  
-  <div class="col-md-3 col-sm-6">
-    <div class="card h-100">
-      <img src="https://placehold.co/300x300" class="card-img-top" alt="Fender Blues Jr">
-      <div class="card-body">
-        <span class="badge bg-danger mb-1">Amp</span>
-        <h6 class="card-title mb-0">Fender Blues Jr IV</h6>
-        <small class="text-muted">Fender</small>
-        <div class="d-flex justify-content-between align-items-center mt-2">
-          <strong>$749.00</strong>
-          <small class="text-muted">Cond: New</small>
-        </div>
-      </div>
-      <div class="card-footer d-flex gap-2">
-        <a href="#" class="btn btn-danger btn-sm w-100">Add to Cart</a>
-      </div>
-    </div>
-  </div>
-  
-  <div class="col-md-3 col-sm-6">
-    <div class="card h-100">
-      <img src="https://placehold.co/300x300" class="card-img-top" alt="Nevermind">
-      <div class="card-body">
-        <span class="badge bg-primary mb-1">CD</span>
-        <h6 class="card-title mb-0">Nevermind</h6>
-        <small class="text-muted">Nirvana</small>
-        <div class="d-flex justify-content-between align-items-center mt-2">
-          <strong>$10.50</strong>
-          <small class="text-muted">Cond: New</small>
-        </div>
-        <small class="text-danger">Out of stock</small>
-      </div>
-      <div class="card-footer">
-        <a href="#" class="btn btn-outline-secondary btn-sm w-100" disabled>Out of Stock</a>
-      </div>
-    </div>
-  </div>
-  
-  <div class="col-md-3 col-sm-6">
-    <div class="card h-100">
-      <img src="https://placehold.co/300x300" class="card-img-top" alt="London Calling">
-      <div class="card-body">
-        <span class="badge bg-dark mb-1">Vinyl</span>
-        <h6 class="card-title mb-0">London Calling</h6>
-        <small class="text-muted">The Clash</small>
-        <div class="d-flex justify-content-between align-items-center mt-2">
-          <strong>$39.00</strong>
-          <small class="text-muted">Cond: VG+</small>
-        </div>
-      </div>
-      <div class="card-footer">
-        <a href="#" class="btn btn-danger btn-sm w-100">Add to Cart</a>
-      </div>
-    </div>
-  </div>
-  
+  {% endfor %}
 </div>
-
-<!-- Pagination -->
-<div class="d-flex justify-content-between align-items-center mt-4">
-  <small class="text-muted">Showing 1–6 of 100 items</small>
-  <nav>
-    <ul class="pagination pagination-sm mb-0">
-      <li class="page-item disabled"><a class="page-link" href="#">‹</a></li>
-      <li class="page-item active"><a class="page-link" href="#">1</a></li>
-      <li class="page-item"><a class="page-link" href="#">2</a></li>
-      <li class="page-item"><a class="page-link" href="#">3</a></li>
-      <li class="page-item"><a class="page-link" href="#">›</a></li>
-    </ul>
-  </nav>
+<div class="mt-4">
+  <small class="text-muted">Showing {{ products|length }} items</small>
 </div>
 
 {% endblock %}

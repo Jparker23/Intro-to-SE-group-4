@@ -1,5 +1,5 @@
 from django.urls import path,include
-from .views import (home, catalog, comparison, seller_admin_catalog, set_default_address, delete_address, set_default_payment, delete_payment, prod_details, buyer_only_catalog, adminModeration, sellerInventory, sellerProducts,  brandResults, billing, orderConf, orders, addresses, returns,  returnReq, createProd, checkout)
+from .views import (home, catalog, comparison, seller_admin_catalog, set_default_address, delete_address, set_default_payment, delete_payment, prod_details, buyer_only_catalog, adminModeration, sellerInventory, sellerProducts,  brandResults, billing, orderConf, orders, addresses, returns,  returnReq, createProd, checkout, editProd, delistProd)
 from rest_framework.routers import DefaultRouter
 from .products import ProductViewSet
 #auto generates root URL API endpoint pages
@@ -33,4 +33,7 @@ urlpatterns = [
     path("compare/", comparison, name="compare"),
     path("product/<int:pk>/", prod_details, name="product_detail"),
     path("checkout/", checkout, name="checkout"),
+    path("seller/products/<int:pk>/edit/", editProd, name="editProd"),
+    path("seller/products/<int:pk>/delist/", delistProd, name="delistProd"),
+
 ]

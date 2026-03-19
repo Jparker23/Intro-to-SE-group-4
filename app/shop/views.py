@@ -121,8 +121,9 @@ def sellerProducts(request):
 
 
 
+@login_required
 def createProd(request): #made this because I made a new-item page for sellers
-    if getattr(request.user, "role", None) != "seller":
+    if request.user.role != "seller":
         return redirect("home")
 
     if request.method == 'POST':
@@ -135,13 +136,56 @@ def createProd(request): #made this because I made a new-item page for sellers
             # Check whether it's valid and save the data
             product.save()
             #html page for sellers will be created then linked to this
-            return redirect('/api/inventory/')
+            return redirect('sellerInventory')
     else:
         # any other request method creates an empty form
         form = ProductForm()
         
     # pull up html page- needs to be named
     return render(request, "generic/new-item.html", {"form": form})
+
+@login_required
+def editProd(request, pk):
+    if request.user.role != "seller":
+        return redirect("home")
+    product = get_object_or_404(Product, pk=pk, seller=request.user)
+    if request.method == "POST":
+        # updating price and stock requires no admin approval
+        new_price = request.POST.get("price")
+        new_stock = request.POST.get("stock")
+        if new_price:
+            product.price = new_price
+        if new_stock:
+            product.stock = new_stock
+        
+        # new name or description requires admin approval
+        new_name = request.POST.get("name", "").strip()
+        new_description = request.POST.get("description", "").strip()
+        needs_review = False
+        
+        #if the name or description is added, store new value in a pending field and set approval status to pending
+        if new_name and new_name != product.name:
+            product.pending_name = new_name
+            needs_review = True
+        if new_description and new_description != product.description:
+            product.pending_description = new_description
+            needs_review = True
+        if needs_review:
+            product.approval_status = "Pending"
+        
+        product.save()
+        return redirect("sellerInventory")
+    return render(request, "generic/edit-item.html", {"product": product})
+
+@login_required
+def delistProd(request, pk):
+    if request.user.role != "seller":
+        return redirect("home")
+    product = get_object_or_404(Product, pk=pk, seller=request.user)
+    if request.method == "POST":
+        product.is_active = False
+        product.save()
+    return redirect("sellerInventory")
 
 def comparison(request):
     selected_ids = request.GET.getlist("compare")

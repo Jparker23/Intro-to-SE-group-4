@@ -15,7 +15,9 @@ class Product(models.Model):
     seller = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE, related_name="products")
     category = models.ForeignKey(Category,on_delete=models.SET_NULL, null=True,blank=True)
     name = models.CharField(max_length=255)
+    pending_name = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
+    pending_description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
 

@@ -22,6 +22,7 @@ class Product(models.Model):
     pending_description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
+    photo = models.ImageField(upload_to="product_photos/", null=True, blank=True)
 
     APPROVAL_STATUS = [("Pending", "Pending"),("Approved", "Approved"),("Rejected", "Rejected"),]
     is_active = models.BooleanField(default=True)
@@ -133,8 +134,8 @@ class OrderItem(models.Model):
 
 class Payment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name="payments")
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payments")
-
+    order = models.ForeignKey(Order,on_delete=models.CASCADE,related_name="payments",null=True,blank=True,)
+    
     METHOD_CHOICES = [("CreditCard", "CreditCard"),("DebitCard", "DebitCard"),]
 
     STATUS_CHOICES = [("Pending", "Pending"),("Completed", "Completed"),("Failed", "Failed"),("Refunded", "Refunded"),]

@@ -3,12 +3,55 @@
 
 {% block content %}
 <div class="container my-4">
-  <h2>Add New Product</h2>
+  <div class="card shadow-sm p-4">
+    <h2 class="mb-4">Add New Product</h2>
 
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Create Product</button>
-  </form>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- Category -->
+      <div class="mb-3">
+        <label class="form-label">Category</label>
+        {{ form.category }}
+      </div>
+
+      <!-- Name -->
+      <div class="mb-3">
+        <label class="form-label">Product Name</label>
+        {{ form.name }}
+      </div>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label class="form-label">Description</label>
+        {{ form.description }}
+      </div>
+
+      <!-- Price -->
+      <div class="mb-3">
+        <label class="form-label">Price</label>
+        {{ form.price }}
+      </div>
+
+      <!-- Stock -->
+      <div class="mb-3">
+        <label class="form-label">Stock Quantity</label>
+        {{ form.stock }}
+      </div>
+
+      <!-- Image Upload -->
+      <div class="mb-3">
+        <label class="form-label">Product Image</label>
+        {{ form.photo }}
+      </div>
+
+      <!-- Submit -->
+      <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary">
+          Create Product
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}

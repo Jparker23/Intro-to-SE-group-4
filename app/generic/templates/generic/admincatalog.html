@@ -109,12 +109,7 @@
        
         <div class="card-footer bg-white border-0">
 
-          <a href="{% url 'product_detail' product.id %}"class="btn btn-outline-primary w-100 mb-2">View</a>
-
-          <!-- Seller can edit products from here/ HASNT BEEN ROUTED TO ACTIVE HTMLS YET -->
-          {% if request.user.role == "seller" %}
-          <a href="{% url 'edit_product' product.id %}"class="btn btn-outline-secondary w-100 mb-2">Edit</a>
-          {% endif %}
+          <a href="{% url 'prod_details' product.id %}"class="btn btn-outline-primary w-100 mb-2">View</a>
 
           <!-- Controls that are for admins only/ HASNT BEEN ROUTED TO ACTIVE HTMLS YET -->
           {% if request.user.role == "admin" %}

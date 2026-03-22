@@ -42,6 +42,7 @@
       <thead class="table-dark">
         <tr>
           <th>#</th>
+          <th>Photo</th>
           <th>Title</th>
           <th>Category</th>
           <th>Status</th>
@@ -54,6 +55,15 @@
         {% for product in products %}
         <tr>
           <td>{{ forloop.counter }}</td>
+          <td>
+            {% if product.photo %}
+              <img src="{{ product.photo.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="width: 70px; height: 70px; object-fit: cover;">
+            {% else %}
+              <div class="bg-light border rounded d-flex align-items-center justify-content-center text-muted" style="width: 70px; height: 70px;">
+                No Photo
+              </div>
+            {% endif %}
+          </td>
           <td>{{ product.name }}</td>
           <td><span class="badge bg-dark">{{ product.category }}</span></td>
           <td>
@@ -77,7 +87,7 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="7" class="text-center">
+          <td colspan="8" class="text-center">
             No products yet. <a href="{% url 'createProd' %}">Add your first listing.</a>
           </td>
         </tr>

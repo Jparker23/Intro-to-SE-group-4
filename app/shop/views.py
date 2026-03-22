@@ -19,9 +19,11 @@ def _buyer_visible_products():
 
 
 def home(request):
-    #4 approved and in stock products on the home page
-    featured_products = Product.objects.filter(is_active=True, is_approved=True)[:4]
-    return render(request, "generic/home.html", {"featured_products": featured_products})
+    #approved and in stock products on the home page
+    User = get_user_model()
+    featured_products = _buyer_visible_products().filter(stock__gt=0)[:4]
+    sellers = User.objects.filter(role="seller").order_by("username")
+    return render(request, "generic/home.html", {"featured_products": featured_products,"sellers": sellers,})
 
 def brandResults(request, brand):
     return render(request, "generic/brandResults.html", {"brand": brand})
@@ -31,6 +33,8 @@ def catalog(request):
 
 #this is a catalog ONLY for buyers
 def buyer_only_catalog(request):
+    User = get_user_model()
+    sellers = User.objects.filter(role="seller").order_by("username")
     query = request.GET.get("query", "").strip() #product name get from search bar
     brand = request.GET.get("seller", "").strip()
     category = request.GET.get("category", "")
@@ -53,7 +57,7 @@ def buyer_only_catalog(request):
     if max_price:
         products = products.filter(price__lte=max_price) #lte is less than or equal to
 
-    return render(request, "generic/catalog.html", {"products": products})
+    return render(request, "generic/catalog.html", {"products": products, "sellers":sellers,})
 
 
 #this is renders the catalog page that is for admins and sellers, sellers will only see their own products, and admins will see all products approved or not
@@ -158,7 +162,7 @@ def createProd(request): #made this because I made a new-item page for sellers
             return redirect("sellerInventory")
     else:
         # any other request method creates an empty form
-        form = ProductForm()
+        form = ProductForm(request.POST, request.FILES)
         
     # pull up html page- needs to be named
     return render(request, "generic/new-item.html", {"form": form})
@@ -169,6 +173,7 @@ def editProd(request, pk):
         return redirect("home")
     
     product = get_object_or_404(Product, pk=pk, seller=request.user, deleted_at__isnull=True,)
+    categories = Category.objects.all()
     
     if request.method == "POST":
         new_name = request.POST.get("name", "").strip() or product.name
@@ -180,6 +185,11 @@ def editProd(request, pk):
 
         new_price = Decimal(new_price_raw) if new_price_raw else product.price
         new_stock = int(new_stock_raw) if new_stock_raw else product.stock
+        new_photo = request.FILES.get("photo")
+        photo_changed = new_photo is not None
+
+        if new_photo:
+            product.photo = new_photo
 
         if new_category_id:
             try:
@@ -198,7 +208,7 @@ def editProd(request, pk):
         visibility_changed = new_orbit != product.orbit_int
         stock_changed = new_stock != product.stock
 
-        other_fields_changed = any([new_name != product.name,new_description != product.description,new_price != product.price,new_category != product.category,])
+        other_fields_changed = any([new_name != product.name,new_description != product.description,new_price != product.price,new_category != product.category,photo_changed,])
 
         # Only stock/visibility updates happen on the same row.
         if not other_fields_changed:
@@ -219,7 +229,7 @@ def editProd(request, pk):
 
         # All other edits create a new row and redirect the old row to it.
         with transaction.atomic():
-            new_product = Product.objects.create(seller=product.seller,category=new_category,name=new_name,description=new_description,price=new_price,stock=new_stock,is_active=True,is_approved=False,approval_status="Pending",orbit_int=True,)
+            new_product = Product.objects.create(seller=product.seller,category=new_category,name=new_name,description=new_description,price=new_price,stock=new_stock,photo= new_photo if new_photo else product.photo, is_active=True,is_approved=False,approval_status="Pending",orbit_int=True,)
 
             product.redirect_int  = new_product
             product.orbit_int = False
@@ -227,7 +237,7 @@ def editProd(request, pk):
 
         return redirect("sellerInventory")
 
-    return render(request, "generic/edit-item.html", {"product": product})
+    return render(request, "generic/edit-item.html", {"product": product, "categories": categories})
 
   
 @login_required
@@ -246,16 +256,15 @@ def comparison(request):
     return render ( request, "generic/comparison.html", {"products": products})
 
 def prod_details(request, pk):
-    product = get_object_or_404(Product.objects.select_related("redirect_int", "seller", "category"), pk=pk)
+    product = get_object_or_404(Product, pk=pk)
 
     if product.deleted_at is not None:
         return redirect("catalog")
 
-    if product.redirect_int_id:
-        return redirect("prod_details", pk=product.redirect_int_id)
+    if product.redirect_int is not None:
+        return redirect("prod_details", pk=product.redirect_int.pk)
 
-    if not (product.is_active and product.is_approved and product.orbit_int):
-        return redirect("catalog")
+    return render(request, "generic/product.html", {"product": product})
 
 
 @login_required
@@ -267,7 +276,9 @@ def checkout(request):
         return redirect("cart:cart_details")
 
     saved_addresses = Address.objects.filter(user=request.user)
-    saved_payments = Payment.objects.filter(user=request.user, is_saved=True).order_by("-is_default", "-payment_date")
+    saved_payments = Payment.objects.filter(user=request.user, is_saved=True).order_by("-is_default", "-payment_date")    
+    errors = {}
+    
     invalid_items = []
     for item in cart_items:
         product = item.product
@@ -287,7 +298,6 @@ def checkout(request):
     if request.method == "POST":
         selected_address = request.POST.get("saved_address")
         selected_payment = request.POST.get("saved_payment")
-        payment_method = request.POST.get("payment_method", "").strip()
 
         errors = {}
         if selected_address:
@@ -320,17 +330,17 @@ def checkout(request):
 
             shipping_address = None
             if not errors:
-                shipping_address = Address.objects.create(
-                    user=request.user,
-                    full_name=f"{first} {last}",
-                    street=street,
-                    city=city,
-                    state=state,
-                    zipcode=zipcode,
-                    country=country,
-                )
+                shipping_address = Address.objects.create(user=request.user,full_name=f"{first} {last}", street=street,city=city,state=state,zipcode=zipcode,country=country,is_default=False,)
 
         selected_saved_payment = None
+        payment_method = request.POST.get("payment_method", "").strip()
+
+        cardholder_name = ""
+        card_brand = ""
+        card_last4 = ""
+        exp_month = ""
+        exp_year = ""
+
         if selected_payment:
             selected_saved_payment = get_object_or_404(
                 Payment,
@@ -349,7 +359,9 @@ def checkout(request):
         exp_month = ""
         exp_year = ""
 
-        if selected_saved_payment:
+        if selected_payment:
+            selected_saved_payment = get_object_or_404(Payment,id=selected_payment,user=request.user,is_saved=True,)
+            payment_method = selected_saved_payment.payment_method
             cardholder_name = selected_saved_payment.cardholder_name
             card_brand = selected_saved_payment.card_brand
             card_last4 = selected_saved_payment.card_last4
@@ -363,6 +375,8 @@ def checkout(request):
             exp_year = request.POST.get("exp_year", "").strip()
             save_payment = bool(request.POST.get("save_payment"))
 
+            if not payment_method:
+                errors["payment_method"] = "Payment method is required."
             if not cardholder_name:
                 errors["cardholder_name"] = "Cardholder name is required."
             if not card_brand:
@@ -380,6 +394,8 @@ def checkout(request):
         if errors:
             return render(request,"generic/checkout.html",{"errors": errors,"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": subtotal,"tax": tax,"fees": fees,"total": total,},)
 
+       
+        # Create order + items + payment
         with transaction.atomic():
             order = Order.objects.create(buyer=request.user,shipping_address=shipping_address,subtotal=subtotal,tax_rate=TAX_RATE_PERCENT,tax=tax,fee=fees,total=total,status="Processing",)
 
@@ -392,11 +408,13 @@ def checkout(request):
                 item.product.stock -= item.quantity
                 item.product.save(update_fields=["stock"])
 
-            Fee.objects.create(order=order, fee_type="Shipping", amount=fees)
+            Fee.objects.create(order=order,fee_type="Shipping",amount=fees,)
 
+            # Save card for future use only if user entered a new one and checked save
             if not selected_saved_payment and bool(request.POST.get("save_payment")):
-                Payment.objects.create(user=request.user,payment_method=payment_method,payment_status="Pending",cardholder_name=cardholder_name,card_brand=card_brand,card_last4=card_last4,exp_month=exp_month,exp_year=exp_year,is_saved=True,is_default=False,)
+                Payment.objects.create(user=request.user,order=None,payment_method=payment_method,payment_status="Pending",cardholder_name=cardholder_name,card_brand=card_brand,card_last4=card_last4,exp_month=exp_month,exp_year=exp_year,is_saved=True,is_default=False,)
 
+            # Actual payment record for the order
             Payment.objects.create(user=request.user,order=order,payment_method=payment_method,payment_status="Completed",cardholder_name=cardholder_name,card_brand=card_brand,card_last4=card_last4,exp_month=exp_month,exp_year=exp_year,is_saved=False,is_default=False,)
 
             cart_items.delete()
@@ -404,7 +422,6 @@ def checkout(request):
         return redirect("orderConf")
 
     return render(request,"generic/checkout.html",{"errors": {},"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": subtotal,"tax": tax,"fees": fees,"total": total,},)
-
 
 
 #This is the address logic here, handles saving addresses to accounts, setting default shipping addresses, and deleting the addresses
@@ -461,6 +478,9 @@ def delete_address(request, address_id):
 def billing(request):
     errors = {}
 
+    saved_payments = Payment.objects.filter(user=request.user,is_saved=True).order_by("-is_default", "-payment_date")
+
+
     if request.method == "POST":
         cardholder_name = request.POST.get("cardholder_name", "").strip()
         payment_method = request.POST.get("payment_method", "").strip()
@@ -480,8 +500,7 @@ def billing(request):
 
             return redirect("billing")
 
-    saved_payments = Payment.objects.filter(user=request.user, is_saved=True).order_by("-is_default", "-payment_date")
-
+        saved_payments = Payment.objects.filter(user=request.user, is_saved=True).order_by("-is_default", "-payment_date")
     return render(request, "generic/billing.html", {"saved_payments": saved_payments,"errors": errors,})
 
 @login_required

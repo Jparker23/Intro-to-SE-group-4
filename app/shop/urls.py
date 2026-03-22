@@ -8,12 +8,12 @@ router = DefaultRouter()
 router.register(r"products", ProductViewSet, basename="products")
 
 
+
 urlpatterns = [
     path("home/", home, name="home"),
     path("", include(router.urls)),
     path("brands/<str:brand>/", brandResults, name="brandResults"),
     path("admin/moderation/", adminModeration, name="adminModeration"),
-    path("billing/", billing, name="billing"),
     path("orderConf/", orderConf, name="orderConf"),
     path("account/orders/", orders, name="orders"),
     path("account/addresses/", addresses, name="addresses"),
@@ -24,16 +24,17 @@ urlpatterns = [
     path("account/billing/delete/<int:payment_id>/", delete_payment, name="delete_payment"),
     path("account/returns/", returns, name="returns"),
     path("account/returns/request/", returnReq, name="returnReq"),
+
     #admin and seller catalog
-    path("seller/catalog/", seller_admin_catalog, name="seller_admin_catalog"),
+    path("seller/catalog/", sellerInventory, name="sellerInventory"),
     path("catalog/", buyer_only_catalog, name="catalog"),
-    path("products/", sellerProducts, name="sellerProducts"),
+    path("seller/<int:pk>/products", sellerProducts, name="sellerProducts"),
     path("inventory/", sellerInventory, name="sellerInventory"),
     path("seller/products/new/", createProd, name="createProd"),
     path("compare/", comparison, name="compare"),
-    path("product/<int:pk>/", prod_details, name="product_detail"),
+    path("product/<int:pk>/", prod_details, name="prod_details"),
     path("checkout/", checkout, name="checkout"),
     path("seller/products/<int:pk>/edit/", editProd, name="editProd"),
     path("seller/products/<int:pk>/delist/", delistProd, name="delistProd"),
-
 ]
+

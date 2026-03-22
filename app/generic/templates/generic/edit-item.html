@@ -1,0 +1,37 @@
+{% extends "generic/base.html" %}
+{% load static %}
+
+{% block title %}Edit Product{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <h2>Edit Product</h2>
+  <p class="text-muted small">Price and stock save immediately. Name and description require admin approval.</p>
+
+  {% if product.approval_status == "Pending" %}
+    <div class="alert alert-warning">You have changes pending admin review.</div>
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label">Price</label>
+      <input type="number" name="price" step="0.01" class="form-control" value="{{ product.price }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Stock</label>
+      <input type="number" name="stock" min="0" class="form-control" value="{{ product.stock }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Name</label>
+      <input type="text" name="name" class="form-control" value="{{ product.pending_name|default:product.name }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Description</label>
+      <textarea name="description" class="form-control" rows="3">{{ product.pending_description|default:product.description }}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{% url 'sellerInventory' %}" class="btn btn-outline-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}

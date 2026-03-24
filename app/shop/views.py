@@ -113,11 +113,26 @@ def returnReq(request):
 def returns(request):
     return render(request, "generic/returns.html")
 
+@login_required
 def sellerInventory(request): 
-    return render(request, "generic/seller-inventory.html")
+    if request.user.role != "seller":
+        return redirect("home")
+    products = Product.objects.filter(seller=request.user).select_related("category")
+    total = products.count()
+    low_stock = products.filter(stock__range=(1, 2)).count()
+    out_of_stock = products.filter(stock=0).count()
+    return render(request, "generic/seller-inventory.html", {
+        "products": products,
+        "total": total,
+        "low_stock": low_stock,
+        "out_of_stock": out_of_stock,
+    })
 
-def sellerProducts(request):
-    return render(request, "generic/seller-products.html")
+def sellerProducts(request, pk):
+    from accounts.models import User
+    seller = get_object_or_404(User, pk=pk)
+    products = Product.objects.filter(seller=seller, is_active=True, is_approved=True)
+    return render(request, "generic/seller-products.html", {"products": products, "seller": seller})
 
 
 

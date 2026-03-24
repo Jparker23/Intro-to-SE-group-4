@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from shop.models import Product, Category
+from shop.models import Product, Category, OrderItem, Order, Payment
 from accounts.models import User
 #file to seed the database with premade values
 
@@ -8,6 +8,9 @@ class Command(BaseCommand):
     
     def handle(self, *args, **options):
         # Clear existing data
+        Payment.objects.all().delete()
+        OrderItem.objects.all().delete()
+        Order.objects.all().delete()
         Product.objects.all().delete()
         Category.objects.all().delete()
         User.objects.all().delete()

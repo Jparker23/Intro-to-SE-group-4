@@ -22,7 +22,7 @@ class Product(models.Model):
     pending_description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
-    photo = models.ImageField(upload_to="product_photos/", null=True, blank=True)
+    photo = models.ImageField(upload_to="product_photos/", null=True, blank=True) #reference to a file path
 
     APPROVAL_STATUS = [("Pending", "Pending"),("Approved", "Approved"),("Rejected", "Rejected"),]
     is_active = models.BooleanField(default=True)

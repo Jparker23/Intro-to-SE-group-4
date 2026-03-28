@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import ProtectedError
 from django.contrib.auth import get_user_model
 from decimal import Decimal
-from .models import Product, Address, Order, Category, OrderItem, Payment, Cart, CartItem, Fee
+from .models import Product, Address, Order, Category, OrderItem, Payment, Cart, CartItem, Fee, ReturnRequest
 from .forms import ProductForm
 from django.db import transaction
 from django.utils import timezone
@@ -117,12 +117,38 @@ def orders(request):
     return render(request, "generic/orders.html", {"orders": user_orders,})
 
 
-def returnReq(request):
-    return render(request, "generic/returnReq.html")
-
+@login_required
 def returns(request):
-    return render(request, "generic/returns.html")
+    user_returns = ReturnRequest.objects.filter(
+        buyer=request.user
+    ).select_related(
+        "order_item", "order_item__product"
+    ).order_by("-created_at")
+    return render(request, "generic/returns.html", {"returns": user_returns})
 
+
+@login_required
+def returnReq(request):
+    order_item_id = request.GET.get("order_item_id") or request.POST.get("order_item_id")
+    order_item = get_object_or_404(OrderItem, id=order_item_id, order__buyer=request.user)
+
+    existing = ReturnRequest.objects.filter(buyer=request.user, order_item=order_item).first()
+    if existing:
+        return redirect("returns")
+
+    if request.method == "POST":
+        reason = request.POST.get("reason", "").strip()
+        if reason:
+            ReturnRequest.objects.create(
+                buyer=request.user,
+                order_item=order_item,
+                reason=reason,
+                status="Pending",
+                refund_amount=order_item.price_at_purchase * order_item.quantity,
+            )
+            return redirect("returns")
+
+    return render(request, "generic/returnReq.html", {"order_item": order_item})
 @login_required
 def sellerInventory(request): 
     if request.user.role != "seller":

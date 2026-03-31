@@ -106,6 +106,13 @@ def orders(request):
 
     return render(request, "generic/orders.html", {"orders": orders,})
 
+@login_required
+def sellerOrders(request):
+    if request.user.role != "seller":
+        return redirect("home")
+    seller_orders = OrderItem.objects.filter(seller=request.user).select_related("order", "product", "order__buyer", "order__shipping_address").order_by("-order__created_at")
+    return render(request, "generic/sellerOrders.html", {"seller_orders": seller_orders})
+
 
 def returnReq(request):
     return render(request, "generic/returnReq.html")

@@ -1,0 +1,59 @@
+{% extends "generic/base.html" %}
+{% block title %}My Sales{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <h2>My Sales</h2>
+  <p>Orders containing your products.</p>
+
+  {% if seller_orders %}
+    {% for item in seller_orders %}
+    <div class="card p-3 mb-3">
+      <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+        <div>
+          <h5 class="mb-1">Order #{{ item.order.id }}</h5>
+          <p class="mb-0 text-muted">Placed on {{ item.order.created_at|date:"M d, Y" }}</p>
+        </div>
+        <div class="text-end">
+          <p class="mb-1"><strong>Status:</strong> {{ item.order.status }}</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+          <strong>{{ item.product.name }}</strong><br>
+          <small class="text-muted">
+            Quantity: {{ item.quantity }} |
+            Buyer: {{ item.order.buyer.username }}
+          </small>
+        </div>
+        <div>
+          ${{ item.price_when_ordered|floatformat:2 }}
+        </div>
+      </div>
+
+      {% if item.order.shipping_address %}
+      <div class="mt-2">
+        <small class="text-muted">
+          <strong>Ship to:</strong>
+          {{ item.order.shipping_address.full_name }},
+          {{ item.order.shipping_address.street }},
+          {{ item.order.shipping_address.city }},
+          {{ item.order.shipping_address.state }}
+          {{ item.order.shipping_address.zipcode }}
+        </small>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="card p-3 mb-3">
+      <p class="mb-0">You have no sales yet.</p>
+    </div>
+  {% endif %}
+
+  <a class="btn btn-outline-secondary" href="{% url 'sellerInventory' %}">Back to Inventory</a>
+</div>
+{% endblock %}

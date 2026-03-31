@@ -1,0 +1,17 @@
+{% extends "generic/base.html" %}
+
+{% block title %}Seller Account{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <h2>Seller Account</h2>
+  <p class="text-muted">Manage your seller tools here.</p>
+
+  <div class="d-grid gap-2 col-md-6">
+    <a href="{% url 'sellerInventory' %}" class="btn btn-dark">Inventory</a>
+    <a href="{% url 'createProd' %}" class="btn btn-outline-dark">Add Product</a>
+    <a href="{% url 'sellerPayouts' %}" class="btn btn-outline-dark">Payouts</a>
+    <a class="btn btn-outline-danger" href="{% url 'logout' %}">Logout</a>
+</div>
+</div>
+{% endblock %}

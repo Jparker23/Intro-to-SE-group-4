@@ -1,0 +1,29 @@
+{% extends "generic/base.html" %}
+
+{% block title %}Seller Payouts{% endblock %}
+
+{% block content %}
+<h2>Your Earnings</h2>
+<p><strong>Total Earned:</strong> ${{ total|floatformat:2 }}</p>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Order</th>
+      <th>Product</th>
+      <th>Amount</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for payout in payouts %}
+    <tr>
+      <td>#{{ payout.order_item.order.id }}</td>
+      <td>{{ payout.order_item.product.name }}</td>
+      <td>${{ payout.amount }}</td>
+      <td>{{ payout.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

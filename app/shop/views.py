@@ -1,9 +1,9 @@
 from django.shortcuts import render,redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Sum
 from django.contrib.auth import get_user_model
 from decimal import Decimal
-from .models import Product, Address, Order, Category, OrderItem, Payment, Cart, CartItem, Fee
+from .models import Product, Payout, Address, Order, Category, OrderItem, Payment, Cart, CartItem, Fee
 from .forms import ProductForm
 from django.db import transaction
 from django.utils import timezone
@@ -60,23 +60,18 @@ def buyer_only_catalog(request):
     return render(request, "generic/catalog.html", {"products": products, "sellers":sellers,})
 
 
-#this is renders the catalog page that is for admins and sellers, sellers will only see their own products, and admins will see all products approved or not
+#this is renders the catalog page that is for sellers, sellers will only see their own products, 
 @login_required
-def seller_admin_catalog(request):
-    if request.user.role not in ["seller", "admin"]:
-        return redirect("catalog")
+def adminCatalog(request):
+    if request.user.role != "admin":
+        return redirect("home")
 
     query = request.GET.get("query", "").strip()
     category = request.GET.get("category", "").strip()
     approval_status = request.GET.get("approval_status", "").strip()
     active_status = request.GET.get("is_active", "").strip()
 
-    # admin sees everything
-    if request.user.role == "admin":
-        products = Product.objects.all().select_related("seller", "category", "redirect_int")
-    else:
-        # seller only sees their own products
-        products = Product.objects.filter(seller=request.user).select_related("seller", "category", "redirect_int")
+    products = Product.objects.all().select_related("seller", "category", "redirect_int")
 
     if query:
         products = products.filter(name__icontains=query)
@@ -84,23 +79,21 @@ def seller_admin_catalog(request):
     if category:
         products = products.filter(category__name__iexact=category)
 
-    if approval_status:
-        if approval_status == "approved":
-            products = products.filter(is_approved=True)
-        elif approval_status == "unapproved":
-            products = products.filter(is_approved=False)
-        elif approval_status == "pending":
-            products = products.filter(approval_status="Pending")
-        elif approval_status == "rejected":
-            products = products.filter(approval_status="Rejected")
+    if approval_status == "approved":
+        products = products.filter(is_approved=True)
+    elif approval_status == "unapproved":
+        products = products.filter(is_approved=False)
+    elif approval_status == "pending":
+        products = products.filter(approval_status="Pending")
+    elif approval_status == "rejected":
+        products = products.filter(approval_status="Rejected")
 
-    if active_status:
-        if active_status == "active":
-            products = products.filter(is_active=True)
-        elif active_status == "inactive":
-            products = products.filter(is_active=False)
+    if active_status == "active":
+        products = products.filter(is_active=True)
+    elif active_status == "inactive":
+        products = products.filter(is_active=False)
 
-    return render(request, "generic/selleradmincatalog.html", {"products": products,})
+    return render(request,"generic/admin-catalog.html",{"products": products},)
 
 
 def adminModeration(request):
@@ -128,7 +121,7 @@ def sellerInventory(request):
     if request.user.role != "seller":
         return redirect("home")
     
-    products = Product.objects.filter(seller=request.user).select_related("category", "redirect_int")
+    products = Product.objects.filter(seller=request.user,deleted_at__isnull=True).select_related("category", "redirect_int")
     total = products.count()
     low_stock = products.filter(stock__range=(1, 2), deleted_at__isnull=True).count()
     out_of_stock = products.filter(stock=0, deleted_at__isnull=True).count()
@@ -230,8 +223,8 @@ def editProd(request, pk):
         # All other edits create a new row and redirect the old row to it.
         with transaction.atomic():
             new_product = Product.objects.create(seller=product.seller,category=new_category,name=new_name,description=new_description,price=new_price,stock=new_stock,photo= new_photo if new_photo else product.photo, is_active=True,is_approved=False,approval_status="Pending",orbit_int=True,)
-
-            product.redirect_int  = new_product
+            if product is not None:
+              product.redirect_int  = new_product # type: ignore[assignment]
             product.orbit_int = False
             product.save(update_fields=["redirect_int", "orbit_int"])
 
@@ -282,7 +275,7 @@ def checkout(request):
     invalid_items = []
     for item in cart_items:
         product = item.product
-        if (product.deleted_at is not None or not product.is_active or not product.is_approved or not product.orbit_int or product.redirect_int_id is not None) : 
+        if (product.deleted_at is not None or not product.is_active or not product.is_approved or not product.orbit_int or product.redirect_int is not None) : 
             invalid_items.append(f"{product.name} is no longer available.")
         elif item.quantity > product.stock:
             invalid_items.append(f"{product.name} does not have enough stock.")
@@ -342,12 +335,7 @@ def checkout(request):
         exp_year = ""
 
         if selected_payment:
-            selected_saved_payment = get_object_or_404(
-                Payment,
-                id=selected_payment,
-                user=request.user,
-                is_saved=True,
-            )
+            selected_saved_payment = get_object_or_404(Payment, id=selected_payment, user=request.user,is_saved=True,)
             payment_method = selected_saved_payment.payment_method
 
         if not payment_method:
@@ -403,7 +391,9 @@ def checkout(request):
                 if item.quantity > item.product.stock:
                     raise ValueError(f"{item.product.name} does not have enough stock.")
 
-                OrderItem.objects.create(order=order,product=item.product,seller=item.product.seller,quantity=item.quantity,price_at_purchase=item.product.price,status="Processing",)
+                order_item=OrderItem.objects.create(order=order,product=item.product,seller=item.product.seller,quantity=item.quantity,price_at_purchase=item.product.price,status="Processing",)
+                Payout.objects.create(seller=item.product.seller, order_item=order_item, amount=order_item.price_at_purchase * order_item.quantity, status="Paid", paid_at=timezone.now(),)
+
 
                 item.product.stock -= item.quantity
                 item.product.save(update_fields=["stock"])
@@ -520,3 +510,17 @@ def delete_payment(request, payment_id):
         payment.delete()
 
     return redirect("billing")
+
+@login_required
+def sellerPayouts(request):
+    if request.user.role != "seller":
+        return redirect("home")
+
+    payouts = Payout.objects.filter(seller=request.user).select_related("order_item", "order_item__order", "order_item__product").order_by("-created_at")
+
+    total = payouts.aggregate(total=Sum("amount"))["total"] or 0
+
+    return render(
+        request,"generic/seller-payouts.html", {"payouts": payouts,"total": total,},)
+
+

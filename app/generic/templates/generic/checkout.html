@@ -7,21 +7,18 @@
 <link rel="stylesheet" href="{% static 'generic/css/home.css' %}">
 
 <header class="py-3 position-relative">
-  
   <div class="topRight">
     {% if request.user.is_authenticated %}
-    <a class="LoginContainer" href="{% url 'account' %}">
-      <i class="fa fa-user"></i>
-      <span>Account</span>
-    </a>
+      <a class="LoginContainer" href="{% url 'account' %}">
+        <i class="fa fa-user"></i>
+        <span>Account</span>
+      </a>
     {% else %}
-    <a class="LoginContainer" href="{% url 'login' %}">
-      <i class="fa fa-user"></i>
-      <span>Login</span>
-    </a>
+      <a class="LoginContainer" href="{% url 'login' %}">
+        <i class="fa fa-user"></i>
+        <span>Login</span>
+      </a>
     {% endif %}
-    
-    
   </div>
 </header>
 
@@ -35,55 +32,55 @@
 <div class="container pb-4">
   <form method="post">
     {% csrf_token %}
-    
+
     {% if errors %}
-    <div class="alert alert-danger mb-3" role="alert">
-      Please fill out all required fields before placing your order.
-    </div>
+      <div class="alert alert-danger mb-3" role="alert">
+        Please fill out all required fields before placing your order.
+      </div>
     {% endif %}
-    
+
     <div class="row g-4">
       <div class="col-lg-8">
-        
+
         <section id="shipping-info" class="bg-white p-4 rounded shadow-sm mb-4">
           <h2 class="h4 mb-3">Shipping Information</h2>
-          
+
           <label class="form-label">Use Saved Address</label>
           <select class="form-select mb-3" name="saved_address">
             <option value="">Select saved address</option>
             {% for address in saved_addresses %}
-            <option value="{{ address.id }}">
-              {{ address.full_name }} - {{ address.street }}, {{ address.city }}, {{ address.state }}
-            </option>
+              <option value="{{ address.pk }}">
+                {{ address.full_name }} - {{ address.street }}, {{ address.city }}, {{ address.state }}
+              </option>
             {% endfor %}
           </select>
-          
+
           <p class="small text-muted mb-3">Or enter a new address below.</p>
-          
+
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">First Name</label>
-              <input class="form-control" required type="text" name="first_name" value="{{ request.user.first_name }}">
+              <input class="form-control" type="text" name="first_name" value="{{ request.user.first_name }}">
             </div>
-            
+
             <div class="col-md-6">
               <label class="form-label">Last Name</label>
-              <input class="form-control" required type="text" name="last_name" value="{{ request.user.last_name }}" >
+              <input class="form-control" type="text" name="last_name" value="{{ request.user.last_name }}">
             </div>
-            
+
             <div class="col-12">
               <label class="form-label">Street Address</label>
-              <input class="form-control" required type="text" name="street" placeholder="123 Your Street" >
+              <input class="form-control" type="text" name="street" placeholder="123 Your Street">
             </div>
-            
+
             <div class="col-md-4">
               <label class="form-label">City</label>
-              <input class="form-control"required  type="text" name="city" placeholder="City" >
+              <input class="form-control" type="text" name="city" placeholder="City">
             </div>
-            
+
             <div class="col-md-4">
               <label class="form-label">State</label>
-              <select name="state" class="form-control" required>
+              <select name="state" class="form-control">
                 <option value="">Select State</option>
                 <option value="AL">Alabama</option>
                 <option value="AK">Alaska</option>
@@ -137,12 +134,12 @@
                 <option value="WY">Wyoming</option>
               </select>
             </div>
-            
+
             <div class="col-md-4">
               <label class="form-label">ZIP Code</label>
-              <input type="text" name="zipcode" pattern="[0-9]{5}" maxlength="5" class="form-control" required placeholder= "12345">
+              <input type="text" name="zipcode" pattern="[0-9]{5}" maxlength="5" class="form-control" placeholder="12345">
             </div>
-            
+
             <div class="col-12">
               <!--SRS states we are servicing USA only, so i locked the country in as the USA-->
               <label>Country</label>
@@ -150,7 +147,7 @@
               <input type="hidden" name="country" value="USA">
             </div>
           </div>
-          
+
           <div class="form-check mt-3">
             <input class="form-check-input" type="checkbox" name="save_address" id="save_address">
             <label class="form-check-label" for="save_address">
@@ -158,41 +155,40 @@
             </label>
           </div>
         </section>
-        
-        
+
         <section id="payment-info" class="bg-white p-4 rounded shadow-sm mb-4">
           <h2 class="h4 mb-3">Payment Information</h2>
-          
+
           <label class="form-label">Use Saved Payment Method</label>
           <select class="form-select mb-3" name="saved_payment">
             <option value="">Select saved payment method</option>
             {% for payment in saved_payments %}
-            <option value="{{ payment.id }}">
-              {{ payment.card_brand }} ending in {{ payment.card_last4 }} ({{ payment.exp_month }}/{{ payment.exp_year }})
-            </option>
+              <option value="{{ payment.pk }}">
+                {{ payment.card_brand }} ending in {{ payment.card_last4 }} ({{ payment.exp_month }}/{{ payment.exp_year }})
+              </option>
             {% endfor %}
           </select>
-          
+
           <p class="small text-muted mb-3">Or enter a new card below.</p>
-          
+
           <div class="row g-3">
             <div class="col-12">
               <label class="form-label">Cardholder Name</label>
-              <input class="form-control" required type="text" name="cardholder_name" value="{{ request.user.first_name }} {{ request.user.last_name }}" >
+              <input class="form-control" type="text" name="cardholder_name" value="{{ request.user.first_name }} {{ request.user.last_name }}">
             </div>
-            
+
             <div class="col-12">
               <label class="form-label" for="payment_method">Payment Method</label>
-              <select id="payment_method" name="payment_method" class="form-control" required>
+              <select id="payment_method" name="payment_method" class="form-control">
                 <option value="">Select Payment Method</option>
                 <option value="CreditCard">Credit Card</option>
                 <option value="DebitCard">Debit Card</option>
               </select>
             </div>
-            
+
             <div class="col-md-4">
               <label class="form-label">Card Brand</label>
-              <select class="form-select" required name="card_brand">
+              <select class="form-select" name="card_brand">
                 <option value="">Select brand</option>
                 <option value="Visa">Visa</option>
                 <option value="Mastercard">Mastercard</option>
@@ -200,29 +196,28 @@
                 <option value="Amex">Amex</option>
               </select>
             </div>
-            
+
             <div class="col-12">
               <label class="form-label">Card Number</label>
-              <input class="form-control" required type="text" name="card_number" placeholder="1234 5678 9012 3456">
+              <input class="form-control" type="text" name="card_number" placeholder="1234 5678 9012 3456">
             </div>
-            
-            
+
             <div class="col-md-4">
               <label class="form-label">Exp Month</label>
-              <input class="form-control" required type="text" name="exp_month" placeholder="MM">
+              <input class="form-control" type="text" name="exp_month" placeholder="MM">
             </div>
-            
+
             <div class="col-md-4">
               <label class="form-label">Exp Year</label>
-              <input class="form-control" required type="text" name="exp_year" placeholder="YYYY">
+              <input class="form-control" type="text" name="exp_year" placeholder="YYYY">
             </div>
-            
+
             <div class="col-md-4">
               <label class="form-label">CVV</label>
-              <input class="form-control" required type="text" name="cvv" placeholder="123">
+              <input class="form-control" type="text" name="cvv" placeholder="123">
             </div>
           </div>
-          
+
           <div class="form-check mt-3">
             <input class="form-check-input" type="checkbox" name="save_payment" id="save_payment">
             <label class="form-check-label" for="save_payment">
@@ -231,25 +226,24 @@
           </div>
         </section>
       </div>
-      
+
       <!-- Right Column -->
       <div class="col-lg-4">
         <section id="order-summary" class="bg-white p-4 rounded shadow-sm">
           <h2 class="h4 mb-3">Order Summary</h2>
-          
+
           {% for item in cart_items %}
-          <p class="mb-2">{{ item.product.name }} x {{ item.quantity }} - ${{ item.total|floatformat:2 }}</p>
+            <p class="mb-2">{{ item.product.name }} x {{ item.quantity }} - ${{ item.total|floatformat:2 }}</p>
           {% empty %}
-          <p class="mb-2">No items in cart.</p>
+            <p class="mb-2">No items in cart.</p>
           {% endfor %}
-          
+
           <hr>
           <p class="mb-2">Subtotal: <strong>${{ subtotal|floatformat:2 }}</strong></p>
           <p class="mb-2">Estimated Tax: <strong>${{ tax|floatformat:2 }}</strong></p>
           <p class="mb-2">Shipping Fees: <strong>${{ fees|floatformat:2 }}</strong></p>
           <p class="mb-3 fs-5">Total: <strong>${{ total|floatformat:2 }}</strong></p>
-          
-          
+
           <button class="btn btn-primary w-100" type="submit">Place Order</button>
         </section>
       </div>

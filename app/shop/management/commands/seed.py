@@ -186,6 +186,11 @@ class Command(BaseCommand):
 
         # Create order item
         product = Product.objects.first()
+        if product is None:
+            return
+
+        seller = product.seller
+        price_at_purchase = product.price
 
         OrderItem.objects.create(
             order=order,
@@ -193,8 +198,7 @@ class Command(BaseCommand):
             seller=product.seller,
             quantity=1,
             price_at_purchase=product.price,
-            status="Completed",
-        )
+            status="Completed",)
 
         # Create payment
         Payment.objects.create(

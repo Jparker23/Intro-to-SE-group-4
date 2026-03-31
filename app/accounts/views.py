@@ -22,6 +22,10 @@ class accountView(generics.RetrieveAPIView):
         return self.request.user
     
 def account(request):
+    if request.user.role == "seller":
+        return render(request, "generic/seller-account.html")
+    elif request.user.role == "admin":
+        return render(request, "generic/admin-account.html")
     return render(request, "generic/account.html")
   
 def loginpg(request):
@@ -35,7 +39,13 @@ def loginpg(request):
 
         if user is not None:
             auth_login(request, user)
-            return redirect("home")
+            role = getattr(user, "role", None)
+            if role == "seller":
+                return redirect("sellerInventory")
+            elif role == "admin":
+                return redirect("adminModeration")
+            else:
+                return redirect("home")
         else:
             errors["login"] = "Invalid username or password."
 
@@ -65,8 +75,13 @@ def register(request):
             #if its valid, the data is saved, a user will then be created
             user = serializer.save()
             #new user logs in immediately
-            auth_login(request, user) 
-            return redirect("home")
+            auth_login(request, user)
+            if user.role == "seller":
+                return redirect("sellerInventory")
+            elif user.role == "admin":
+                return redirect("adminModeration")
+            else:
+                return redirect("home") 
         print("REGISTER ERRORS:", serializer.errors)
         errors = serializer.errors
     return render(request, "generic/register.html", {"errors": errors, "data": data})

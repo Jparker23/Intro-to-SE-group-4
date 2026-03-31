@@ -107,7 +107,7 @@ class Order(models.Model):
 
 
     def __str__(self):
-        return f"Order {self.id}"
+        return f"Order {self.pk}"
 
 
 class OrderItem(models.Model):
@@ -153,13 +153,29 @@ class Payment(models.Model):
     payment_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        if self.order_id:
-            return f"Payment for Order {self.order.id} - {self.payment_status}"
+        if self.order is not None:
+            return f"Payment for Order {self.order.pk} - {self.payment_status}"
         return f"{self.card_brand} ending in {self.card_last4}"
     
     def clean(self):
         if self.is_default and not self.is_saved:
             raise ValidationError("A payment method must be saved before it can be default.")
+
+
+class Payout(models.Model):
+    STATUS_CHOICES = [("Pending", "Pending"), ("Paid", "Paid"),]
+
+    seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="payouts",)
+    order_item = models.ForeignKey("OrderItem", on_delete=models.CASCADE,related_name="payouts",)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
+    created_at = models.DateTimeField(auto_now_add=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.seller.username} - ${self.amount} - {self.status}"
+
+
 
 class ReturnRequest(models.Model):
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name="return_requests")
@@ -176,7 +192,7 @@ class ReturnRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Return {self.id} - {self.status}"
+        return f"Return {self.pk} - {self.status}"
 
 
 class AdminLog(models.Model):

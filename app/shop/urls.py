@@ -1,5 +1,5 @@
 from django.urls import path,include
-from .views import (home, catalog, comparison, seller_admin_catalog, set_default_address, delete_address, set_default_payment, delete_payment, prod_details, buyer_only_catalog, adminModeration, sellerInventory, sellerProducts,  brandResults, billing, orderConf, orders, addresses, returns,  returnReq, createProd, checkout, editProd, delistProd)
+from .views import (home, comparison, sellerInventory, sellerPayouts, adminCatalog, set_default_address, delete_address, set_default_payment, delete_payment, prod_details, buyer_only_catalog, adminModeration, sellerInventory, sellerProducts,  brandResults, billing, orderConf, orders, addresses, returns,  returnReq, createProd, checkout, editProd, delistProd)
 from rest_framework.routers import DefaultRouter
 from .products import ProductViewSet
 #auto generates root URL API endpoint pages
@@ -26,7 +26,7 @@ urlpatterns = [
     path("account/returns/request/", returnReq, name="returnReq"),
 
     #admin and seller catalog
-    path("seller/catalog/", sellerInventory, name="sellerInventory"),
+    path("admin/catalog/", adminCatalog, name="adminCatalog"),
     path("catalog/", buyer_only_catalog, name="catalog"),
     path("seller/<int:pk>/products", sellerProducts, name="sellerProducts"),
     path("inventory/", sellerInventory, name="sellerInventory"),
@@ -36,5 +36,6 @@ urlpatterns = [
     path("checkout/", checkout, name="checkout"),
     path("seller/products/<int:pk>/edit/", editProd, name="editProd"),
     path("seller/products/<int:pk>/delist/", delistProd, name="delistProd"),
+    path("seller/payouts/", sellerPayouts, name="sellerPayouts"),
 ]
 

@@ -175,7 +175,7 @@ body {
 }
 
 .brandbar {
-  display: inline-flex;   
+  display: inline-flex;  
   gap: 15px;
   padding: 10px 15px;
   min-width: max-content;
@@ -197,7 +197,13 @@ body {
   color: #046582;
 }
 
-
+.brandbar .logo {
+  color: #f4f3eb;
+  padding: 8px 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-weight: bold;
+}
 
 
 .catalogContainer {

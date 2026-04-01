@@ -68,7 +68,11 @@
         <th>Product</th>
         {% for product in products %}
         <td>
-          <div class="photoPlaceholder mb-2">Photo</div>
+          {% if product.photo %}
+            <img src="{{ product.photo.url }}" alt="{{ product.name }}" class="img-fluid rounded mb-2" style="max-height: 180px; object-fit: cover;">
+          {% else %}
+            <div class="photoPlaceholder mb-2">Photo</div>
+          {% endif %}
           <p class="mb-2">{{ product.name }}</p>
 
           <!--add to cart button-->
@@ -104,7 +108,13 @@
       <tr>
         <th>Category</th>
         {% for product in products %}
-        <td>{{ product.category.name }}</td>
+        <td>
+          {% if product.category %}
+            {{ product.category.name }}
+          {% else %}
+            None
+          {% endif %}
+        </td>
         {% endfor %}
       </tr>
 

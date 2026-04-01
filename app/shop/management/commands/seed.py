@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
-from shop.models import Product, Category, OrderItem, Order, Payment
+from decimal import Decimal
+from shop.models import Product, Category, Order, OrderItem, Payment, Address
 from accounts.models import User
 #file to seed the database with premade values
 
@@ -7,13 +8,9 @@ class Command(BaseCommand):
     help = "Seeds the database with initial data for the Product, Category, and User models"
     
     def handle(self, *args, **options):
-        # Clear existing data
-        Payment.objects.all().delete()
-        OrderItem.objects.all().delete()
-        Order.objects.all().delete()
+       #clear only safe data
         Product.objects.all().delete()
         Category.objects.all().delete()
-        User.objects.all().delete()
         
         # Categories
         record, _ = Category.objects.get_or_create(name="Record")
@@ -80,6 +77,9 @@ class Command(BaseCommand):
                 "is_active": True,
                 "is_approved": True,
                 "approval_status": "Approved",
+                "orbit_int": True,
+                "redirect_int": None,
+                "deleted_at": None,
             }
         )
         
@@ -161,4 +161,57 @@ class Command(BaseCommand):
             }
         )
         
+        # Create address
+        address = Address.objects.create(
+            user=buyer,
+            full_name="Test Buyer",
+            street="123 Test St",
+            city="Test City",
+            state="MS",
+            zipcode="39465",
+            country="USA",
+        )
+
+        # Create order
+        order = Order.objects.create(
+            buyer=buyer,
+            shipping_address=address,
+            subtotal=Decimal("10.99"),
+            tax_rate=Decimal("10.00"),
+            tax=Decimal("1.10"),
+            fee=Decimal("6.99"),
+            total=Decimal("19.08"),
+            status="Completed",
+        )
+
+        # Create order item
+        product = Product.objects.first()
+        if product is None:
+            return
+
+        seller = product.seller
+        price_at_purchase = product.price
+
+        OrderItem.objects.create(
+            order=order,
+            product=product,
+            seller=product.seller,
+            quantity=1,
+            price_at_purchase=product.price,
+            status="Completed",)
+
+        # Create payment
+        Payment.objects.create(
+            user=buyer,
+            order=order,
+            payment_method="CreditCard",
+            payment_status="Completed",
+            is_saved=False,
+            is_default=False,
+            cardholder_name="Test Buyer",
+            card_brand="Visa",
+            card_last4="1111",
+            exp_month="12",
+            exp_year="2028",
+        )
         self.stdout.write(self.style.SUCCESS('Successfully seeded database.'))

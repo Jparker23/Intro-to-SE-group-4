@@ -1,0 +1,23 @@
+{% extends "generic/base.html" %}
+
+{% block title %}Admin Account{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <h2>Admin Dashboard</h2>
+  <p class="text-muted">Manage platform activity and moderation.</p>
+
+ <div class="row g-3 mt-3">
+  <div class="col-md-6">
+    <a href="{% url 'adminModeration' %}" class="btn btn-dark w-100 py-3">
+      Moderate Products
+    </a>
+  </div>
+  <div class="col-md-6">
+    <a href="{% url 'adminCatalog' %}" class="btn btn-outline-dark w-100 py-3">
+      View Catalog
+    </a>
+  </div>
+   <a class="btn btn-outline-danger" href="{% url 'logout' %}">Logout</a>
+</div>
+{% endblock %}

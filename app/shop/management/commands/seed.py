@@ -9,6 +9,10 @@ class Command(BaseCommand):
     
     def handle(self, *args, **options):
        #clear only safe data
+        Payment.objects.all().delete()
+        OrderItem.objects.all().delete()
+        Order.objects.all().delete()
+        Address.objects.all().delete()
         Product.objects.all().delete()
         Category.objects.all().delete()
         
@@ -67,97 +71,89 @@ class Command(BaseCommand):
         seller1.save()
         
         # Products
-        Product.objects.get_or_create(
-            name="record1", seller= seller,
+        product_defaults = dict(
+            is_active=True,
+            is_approved=True,
+            approval_status="Approved",
+            orbit_int=True,
+            redirect_int=None,
+            deleted_at=None,
+        )
+
+        record1, _ = Product.objects.get_or_create(
+            name="record1", seller=seller,
             defaults={
                 "category": record,
                 "description": "Autofilled example record product",
                 "price": 10.99,
                 "stock": 5,
-                "is_active": True,
-                "is_approved": True,
-                "approval_status": "Approved",
-                "orbit_int": True,
-                "redirect_int": None,
-                "deleted_at": None,
+                **product_defaults,
             }
         )
-        
+
         Product.objects.get_or_create(
-            name="record player1", seller= seller,
+            name="record player1", seller=seller,
             defaults={
                 "category": record_player,
                 "description": "Autofilled example record player product",
                 "price": 30.99,
                 "stock": 8,
-                "is_active": True,
-                "is_approved": True,
-                "approval_status": "Approved",
+                **product_defaults,
             }
         )
-        
+
         Product.objects.get_or_create(
-            name="amp1", seller= seller1,
+            name="amp1", seller=seller1,
             defaults={
                 "category": amp,
                 "description": "Autofilled example amp product",
                 "price": 35.99,
                 "stock": 14,
-                "is_active": True,
-                "is_approved": True,
-                "approval_status": "Approved",
+                **product_defaults,
             }
         )
-        
+
         Product.objects.get_or_create(
-            name="tuner1", seller= seller1,
+            name="tuner1", seller=seller1,
             defaults={
                 "category": tuner,
                 "description": "Autofilled example tuner product",
                 "price": 15.99,
                 "stock": 1,
-                "is_active": True,
-                "is_approved": True,
-                "approval_status": "Approved",
+                **product_defaults,
             }
         )
-        
+
         Product.objects.get_or_create(
-            name="headphone1", seller= seller,
+            name="headphone1", seller=seller,
             defaults={
                 "category": headphone,
                 "description": "Autofilled example headphone product",
                 "price": 60.00,
                 "stock": 5,
-                "is_active": True,
-                "is_approved": True,
-                "approval_status": "Approved",
+                **product_defaults,
             }
         )
-        
+
         Product.objects.get_or_create(
-            name="cd1", seller= seller1,
+            name="cd1", seller=seller1,
             defaults={
                 "category": cd,
                 "description": "Autofilled example cd product",
                 "price": 6.99,
                 "stock": 11,
-                "is_active": True,
-                "is_approved": True,
-                "approval_status": "Approved",
+                **product_defaults,
             }
         )
-        
+
         Product.objects.get_or_create(
-            name="cleaner kit1", seller= seller,
+            name="cleaner kit1", seller=seller,
             defaults={
                 "category": cleaning_kit,
                 "description": "Autofilled example cleaning kit product",
                 "price": 14.99,
                 "stock": 9,
-                "is_active": True,
-                "is_approved": True,
-                "approval_status": "Approved",
+                **product_defaults,
             }
         )
         

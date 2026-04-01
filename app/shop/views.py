@@ -5,6 +5,7 @@ from decimal import Decimal
 from .models import Product, Address, Order, OrderItem, Payment, SavedPaymentMethod
 from .forms import ProductForm
 from cart.views import Cart, CartItem
+from accounts.models import User
 
 
 #this page is pretty much all render requests to load my HTML templates and returns a HttpResponse
@@ -13,7 +14,8 @@ from cart.views import Cart, CartItem
 def home(request):
     #4 approved and in stock products on the home page
     featured_products = Product.objects.filter(is_active=True, is_approved=True)[:4]
-    return render(request, "generic/home.html", {"featured_products": featured_products})
+    sellers = User.objects.filter(role="seller").order_by("username")
+    return render(request, "generic/home.html", {"featured_products": featured_products, "sellers": sellers,})
 
 def brandResults(request, brand):
     return render(request, "generic/brandResults.html", {"brand": brand})

@@ -22,6 +22,8 @@ class accountView(generics.RetrieveAPIView):
         return self.request.user
     
 def account(request):
+    if request.user.role == "seller":
+        return render(request, "generic/sellerDash.html")
     return render(request, "generic/account.html")
   
 def loginpg(request):
@@ -35,6 +37,9 @@ def loginpg(request):
 
         if user is not None:
             auth_login(request, user)
+            # send sellers to inventory page rather than home
+            if user.role == "seller":
+                return redirect("sellerInventory")
             return redirect("home")
         else:
             errors["login"] = "Invalid username or password."
@@ -66,6 +71,9 @@ def register(request):
             user = serializer.save()
             #new user logs in immediately
             auth_login(request, user) 
+            # redirect sellers to inventory page rather than home
+            if user.role == "seller":
+                return redirect("sellerInventory")
             return redirect("home")
         print("REGISTER ERRORS:", serializer.errors)
         errors = serializer.errors

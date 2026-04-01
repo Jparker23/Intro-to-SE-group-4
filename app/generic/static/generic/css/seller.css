@@ -1,0 +1,79 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+.topRight {
+  position: absolute;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.LoginContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: #9fd7eb;
+  color: #046582;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.LoginContainer:hover {
+  background-color: #f4f3eb;
+}
+
+.tabHdrContainer {
+  width: 100%;
+  background-color: #046582;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 0;
+  margin-top: 30px;
+}
+
+.tabbar {
+  display: inline-flex;
+  justify-content: center;
+  gap: 15px;
+  padding: 10px 15px;
+  min-width: 100%;
+}
+
+.tabbar a {
+  text-decoration: none;
+  color: #f4f3eb;
+  padding: 8px 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: 0.3s;
+}
+
+.tabbar a:hover {
+  background-color: #f4f3eb;
+  color: #046582;
+}
+
+.dashTab {
+  color: #f4f3eb;
+  border: 1px solid transparent;
+  transition: 0.3s;
+}
+
+.dashTab:hover {
+  background-color: #f4f3eb;
+  color: #046582;
+}
+
+.dashTab.active {
+  background-color: #f4f3eb;
+  color: #046582;
+  font-weight: bold;
+}

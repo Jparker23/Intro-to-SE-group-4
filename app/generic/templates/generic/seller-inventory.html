@@ -1,93 +1,139 @@
 {% extends "generic/base.html" %}
 {% load static %}
+{% block title %}Inventory{% endblock %}
 
-{% block title %}Inventory — Amplify{% endblock %}
-
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div>
-    <h2 class="mb-0">Inventory</h2>
-    <small class="text-muted">{{ products|length}} items</small>
-  </div>
-  <a href="{% url 'createProd' %}" class="btn btn-danger">+ Add Item</a>
-</div>
-
-<!-- Stats -->
-<div class="row g-3 mb-4">
-  <div class="col-md-3">
-    <div class="card text-center p-3">
-      <h4 class="mb-0">{{ total }}</h4>
-      <small class="text-muted">Total Listings</small>
+{% block body %}
+<link rel="stylesheet" href="{% static 'generic/css/seller.css' %}">
+<!-- Header -->
+<header class="py-3 position-relative">
+  <h1 class="text-center m-0 title">Amplify</h1>
+  
+  
+  <!--Redid the button top right of the page, if the user isnt logged in the login button will be there, if they are logged in it will be account-->
+  <div class="topRight">
+    {% if request.user.is_authenticated %}
+    <a class="LoginContainer" href="{% url 'account' %}">
+      <i class="fa fa-user"></i>
+      <span>Account</span>
+    </a>
+    {% else %}
+    <a class="LoginContainer" href="{% url 'login' %}">
+      <i class="fa fa-user"></i>
+      <span>Login</span>
+    </a>
+    {% endif %}
+    
     </div>
   </div>
   
-  <div class="col-md-3">
-    <div class="card text-center p-3">
-      <h4 class="mb-0 text-warning">{{ low_stock }}</h4>
-      <small class="text-muted">Low Stock</small>
+  <!--Search bar with magnifying glass button, that redirects user to the filter catalog page-->
+  <div class="container my-3">
+    <div class="d-flex justify-content-center">
+      <form method="get" action="/api/catalog/" style="max-width: 600px; width:100%;">
+        <div class="input-group search">
+          <input class="form-control text-center" type="text" name="query" placeholder="Search"/>
+          <button class="btn searchIcon" type="submit">
+            <i class="fa fa-search"></i>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
-  <div class="col-md-3">
-    <div class="card text-center p-3">
-      <h4 class="mb-0 text-danger">{{ out_of_stock }}</h4>
-      <small class="text-muted">Out of Stock</small>
+  
+  
+  <div class="tabHdrContainer">
+    <div class="tabbar">
+      <a href="{% url 'sellerInventory' %}" class="btn dashTab {% if active_tab == 'inventory' %}active{% endif %}">Inventory</a>
+      <a href="{% url 'sellerOrders' %}" class="btn dashTab {% if active_tab == 'orders' %}active{% endif %}">Orders</a>
     </div>
   </div>
-</div>
+</header>
+<div class="container py-4 seller-page">
 
-<!-- Table -->
-<div class="card">
-  <div class="card-body p-0">
-    <table class="table table-hover mb-0">
-      <thead class="table-dark">
-        <tr>
-          <th>#</th>
-          <th>Title</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Price</th>
-          <th>Stock</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for product in products %}
-        <tr>
-          <td>{{ forloop.counter }}</td>
-          <td>{{ product.name }}</td>
-          <td><span class="badge bg-dark">{{ product.category }}</span></td>
-          <td>
-            {% if product.approval_status == "Approved" %}
-              <span class="badge bg-success">Approved</span>
-            {% elif product.approval_status == "Pending" %}
-              <span class="badge bg-warning text-dark">Pending</span>
-            {% else %}
-              <span class="badge bg-danger">Rejected</span>
-            {% endif %}
-          </td>
-          <td>${{ product.price }}</td>
-          <td>Stock: {{ product.stock }}</td>
-          <td>
-            <a href="{% url 'editProd' product.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-            <form method="POST" action="{% url 'delistProd' product.pk %}" class="d-inline">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-sm btn-outline-danger">Delist</button>
-            </form>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="7" class="text-center">
-            No products yet. <a href="{% url 'createProd' %}">Add your first listing.</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-0">Inventory</h2>
+      <small class="text-muted">{{ products|length }} items</small>
+    </div>
+    <a href="{% url 'createProd' %}" class="btn btn-danger">+ Add Item</a>
   </div>
-  <div class="card-footer">
-    <small class="text-muted">Showing {{ products|length }} of {{ total }} items</small>
-     
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card text-center p-3">
+        <h4 class="mb-0">{{ total }}</h4>
+        <small class="text-muted">Total Listings</small>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center p-3">
+        <h4 class="mb-0 text-warning">{{ low_stock }}</h4>
+        <small class="text-muted">Low Stock</small>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center p-3">
+        <h4 class="mb-0 text-danger">{{ out_of_stock }}</h4>
+        <small class="text-muted">Out of Stock</small>
+      </div>
+    </div>
   </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ product.name }}</td>
+            <td><span class="badge bg-dark">{{ product.category }}</span></td>
+            <td>
+              {% if product.approval_status == "Approved" %}
+                <span class="badge bg-success">Approved</span>
+              {% elif product.approval_status == "Pending" %}
+                <span class="badge bg-warning text-dark">Pending</span>
+              {% else %}
+                <span class="badge bg-danger">Rejected</span>
+              {% endif %}
+            </td>
+            <td>${{ product.price }}</td>
+            <td>{{ product.stock }}</td>
+            <td>
+              <a href="{% url 'editProd' product.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+              <form method="POST" action="{% url 'delistProd' product.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delist</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center">
+              No products yet. <a href="{% url 'createProd' %}">Add your first listing.</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer">
+      <small class="text-muted">Showing {{ products|length }} of {{ total }} items</small>
+    </div>
+  </div>
+
 </div>
 {% endblock %}

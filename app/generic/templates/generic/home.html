@@ -86,24 +86,9 @@
     <div class="brandbar">
       <!--brand looks a bit off, will fix later-->
       <span class="logo">Brands:</span>
-      <a href="/api/catalog/?seller=Seller1">Seller1</a>
-      <a href="/api/catalog/?seller=Seller2">Seller2</a>
-      <a href="/api/catalog/?seller=Seller3">Seller3</a>
-      <a href="/api/catalog/?seller=Seller4">Seller4</a>
-      <a href="/api/catalog/?seller=Seller5">Seller5</a>
-      <a href="/api/catalog/?seller=Seller6">Seller6</a>
-      <a href="/api/catalog/?seller=Seller7">Seller7</a>
-      <a href="/api/catalog/?seller=Seller8">Seller8</a>
-      <a href="/api/catalog/?seller=Seller9">Seller9</a>
-      <a href="/api/catalog/?seller=Seller10">Seller10</a>
-      <a href="/api/catalog/?seller=Seller11">Seller11</a>
-      <a href="/api/catalog/?seller=Seller12">Seller12</a>
-      <a href="/api/catalog/?seller=Seller13">Seller13</a>
-      <a href="/api/catalog/?seller=Seller14">Seller14</a>
-      <a href="/api/catalog/?seller=Seller15">Seller15</a>
-      <a href="/api/catalog/?seller=Seller16">Seller16</a>
-      <a href="/api/catalog/?seller=Seller17">Seller17</a>
-      <a href="/api/catalog/?seller=Seller18">Seller18</a>
+      {% for seller in sellers %}
+      <a href="/api/catalog/?seller={{ seller.username }}">{{ seller.username }}</a>
+      {% endfor %}
     </div>
   </div>
   

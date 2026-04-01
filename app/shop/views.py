@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from decimal import Decimal
 from .models import Product, Payout, Address, Order, Category, OrderItem, Payment, Cart, CartItem, Fee
 from .forms import ProductForm
+from cart.views import Cart, CartItem
+from accounts.models import User
 from django.db import transaction
 from django.utils import timezone
 
@@ -108,6 +110,13 @@ def orders(request):
     user_orders = (Order.objects.filter(buyer=request.user).select_related("shipping_address").prefetch_related("items", "items__product", "items__seller", "payments", "fees").order_by("-created_at"))
 
     return render(request, "generic/orders.html", {"orders": user_orders,})
+
+@login_required
+def sellerOrders(request):
+    if request.user.role != "seller":
+        return redirect("home")
+    seller_orders = OrderItem.objects.filter(seller=request.user).select_related("order", "product", "order__buyer", "order__shipping_address").order_by("-order__created_at")
+    return render(request, "generic/sellerOrders.html", {"seller_orders": seller_orders})
 
 
 def returnReq(request):

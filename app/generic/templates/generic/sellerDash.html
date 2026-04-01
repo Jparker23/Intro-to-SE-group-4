@@ -1,0 +1,15 @@
+{% extends "generic/base.html" %}
+{% block title %}Account{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <h2>Account dashboard</h2>
+  <!--this will only be for sellers!-->
+  <p>Seller account dashboard</p>
+
+  <div class="list-group">
+    <a class="list-group-item list-group-item-action" href="{% url 'sellerInventory' %}">My Inventory</a>
+    <a class="list-group-item list-group-item-action" href="{% url 'sellerOrders' %}">My Orders</a>
+    <a class="btn btn-outline-danger" href="{% url 'logout' %}">Logout</a>
+  </div>
+</div>
+{% endblock %}

@@ -45,6 +45,8 @@
     <div class="tabbar">
       <a href="{% url 'sellerInventory' %}" class="btn dashTab {% if active_tab == 'inventory' %}active{% endif %}">Inventory</a>
       <a href="{% url 'sellerOrders' %}" class="btn dashTab {% if active_tab == 'orders' %}active{% endif %}">Orders</a>
+      <a href="{% url 'sellerPayouts' %}" class="btn dashTab {% if active_tab == 'orders' %}active{% endif %}">Payouts</a>
+
     </div>
   </div>
 </header>
@@ -77,7 +79,7 @@
           </small>
         </div>
         <div>
-          ${{ item.price_when_ordered|floatformat:2 }}
+          ${{ item.price_at_purchase|floatformat:2 }}
         </div>
       </div>
 

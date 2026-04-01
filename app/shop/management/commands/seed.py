@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from decimal import Decimal
-from shop.models import Product, Category, Order, OrderItem, Payment, Address
+from shop.models import Product, Category, Order, OrderItem, Payment, Address, Payout
+from django.utils import timezone
 from accounts.models import User
 #file to seed the database with premade values
 
@@ -15,6 +16,7 @@ class Command(BaseCommand):
         Address.objects.all().delete()
         Product.objects.all().delete()
         Category.objects.all().delete()
+        Payout.objects.all().delete()
         
         # Categories
         record, _ = Category.objects.get_or_create(name="Record")
@@ -181,7 +183,7 @@ class Command(BaseCommand):
         )
 
         # Create order item
-        product = Product.objects.first()
+        product = Product.objects.get(name="record1", seller=seller)
         if product is None:
             return
 
@@ -210,4 +212,15 @@ class Command(BaseCommand):
             exp_month="12",
             exp_year="2028",
         )
+        
+        # Create Payout
+        order_item = OrderItem.objects.get(order=order, product=product)
+        Payout.objects.create(
+            seller=product.seller,
+            order_item = order_item,
+            amount = price_at_purchase * 1,
+            status = "Paid",
+            paid_at = timezone.now(),
+        )
+        
         self.stdout.write(self.style.SUCCESS('Successfully seeded database.'))

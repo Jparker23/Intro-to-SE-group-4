@@ -1,4 +1,3 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 from decimal import Decimal
@@ -6,18 +5,8 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 
-class UserAccount(AbstractUser):
-    is_approved = models.BooleanField(default=False)
-    is_seller = models.BooleanField(default=False)
-    is_buyer = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.username
-
-
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
-
     def __str__(self):
         return self.name
 
@@ -32,7 +21,6 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
     photo = models.ImageField(upload_to="product_photos/", null=True, blank=True)
-
     APPROVAL_STATUS = [("Pending", "Pending"), ("Approved", "Approved"), ("Rejected", "Rejected")]
     is_active = models.BooleanField(default=True)
     is_approved = models.BooleanField(default=False)
@@ -41,18 +29,15 @@ class Product(models.Model):
     orbit_int = models.BooleanField(default=True)
     redirect_int = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="redirected_from")
     deleted_at = models.DateTimeField(null=True, blank=True)
-
     def soft_delete(self):
         self.deleted_at = timezone.now()
         self.save(update_fields=["deleted_at"])
-
     def __str__(self):
         return f"{self.name} ({self.seller.username})"
 
 
 class Cart(models.Model):
     buyer = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="cart")
-
     def __str__(self):
         return f"Cart for {self.buyer.username}"
 
@@ -61,13 +46,10 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
-
     class Meta:
         unique_together = ("cart", "product")
-
     def total(self):
         return self.product.price * self.quantity
-
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
 
@@ -84,7 +66,6 @@ class Address(models.Model):
     zipcode = models.CharField(max_length=20)
     country = models.CharField(max_length=100)
     is_default = models.BooleanField(default=False)
-
     def __str__(self):
         return self.full_name
 
@@ -93,16 +74,13 @@ class Order(models.Model):
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
     shipping_address = models.ForeignKey(Address, on_delete=models.PROTECT, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
     STATUS_CHOICES = [("Processing", "Processing"), ("Shipping", "Shipping"), ("Completed", "Completed"), ("Returned", "Returned")]
-
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Processing")
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("10.00"))
     tax = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
-
     def __str__(self):
         return f"Order {self.id}"
 
@@ -111,13 +89,10 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="sold_order_items")
-
     ITEM_STATUS_CHOICES = [("Processing", "Processing"), ("Shipping", "Shipping"), ("Completed", "Completed"), ("Returned", "Returned")]
-
     status = models.CharField(max_length=20, choices=ITEM_STATUS_CHOICES, default="Processing")
     quantity = models.PositiveIntegerField()
     price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
-
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
 
@@ -125,10 +100,8 @@ class OrderItem(models.Model):
 class Payment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="payments")
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="payments", null=True, blank=True)
-
     METHOD_CHOICES = [("CreditCard", "CreditCard"), ("DebitCard", "DebitCard")]
     STATUS_CHOICES = [("Pending", "Pending"), ("Completed", "Completed"), ("Failed", "Failed"), ("Refunded", "Refunded")]
-
     payment_method = models.CharField(max_length=20, choices=METHOD_CHOICES)
     payment_status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="Pending")
     cardholder_name = models.CharField(max_length=255, blank=True)
@@ -139,12 +112,10 @@ class Payment(models.Model):
     is_saved = models.BooleanField(default=False)
     is_default = models.BooleanField(default=False)
     payment_date = models.DateTimeField(auto_now_add=True)
-
     def __str__(self):
         if self.order_id:
             return f"Payment for Order {self.order.id} - {self.payment_status}"
         return f"{self.card_brand} ending in {self.card_last4}"
-
     def clean(self):
         if self.is_default and not self.is_saved:
             raise ValidationError("A payment method must be saved before it can be default.")
@@ -154,13 +125,10 @@ class ReturnRequest(models.Model):
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="return_requests")
     order_item = models.ForeignKey(OrderItem, on_delete=models.PROTECT)
     reason = models.TextField(blank=True)
-
     STATUS_CHOICES = [("Pending", "Pending"), ("Approved", "Approved"), ("Denied", "Denied"), ("Processed", "Processed")]
-
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="Pending")
     refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     created_at = models.DateTimeField(auto_now_add=True)
-
     def __str__(self):
         return f"Return {self.id} - {self.status}"
 
@@ -171,19 +139,16 @@ class AdminLog(models.Model):
     target_type = models.CharField(max_length=50)
     target_id = models.PositiveIntegerField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-
     def __str__(self):
         return f"{self.timestamp} - {self.action_type}"
 
 
 class Fee(models.Model):
     FEE_TYPE_CHOICES = [("Order", "Order"), ("Shipping", "Shipping"), ("Handling", "Handling"), ("Item", "Item")]
-
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="fees", null=True, blank=True)
     order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name="fees", null=True, blank=True)
     fee_type = models.CharField(max_length=20, choices=FEE_TYPE_CHOICES)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
-
     def clean(self):
         if not self.order and not self.order_item:
             raise ValidationError("Fee must be attached to an order or an order item.")

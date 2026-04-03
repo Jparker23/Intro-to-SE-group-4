@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.db import transaction
+from accounts.models import User
 from .models import (
-    UserAccount, Product, Category, Cart, CartItem,
+    Product, Category, Cart, CartItem,
     Address, Order, OrderItem, Payment, ReturnRequest,
     AdminLog, Fee
 )
@@ -10,37 +12,92 @@ from .models import (
 # --- Custom Actions ---
 
 def approve_users(modeladmin, request, queryset):
-    queryset.update(is_approved=True)
+    queryset.update(is_approved=True) if hasattr(User, 'is_approved') else None
+    for user in queryset:
+        AdminLog.objects.create(
+            admin=request.user,
+            action_type="Approve User",
+            target_type="User",
+            target_id=user.id,
+        )
 approve_users.short_description = "Approve selected users"
 
+
 def deny_users(modeladmin, request, queryset):
-    queryset.update(is_approved=False)
+    for user in queryset:
+        AdminLog.objects.create(
+            admin=request.user,
+            action_type="Deny User",
+            target_type="User",
+            target_id=user.id,
+        )
 deny_users.short_description = "Deny selected users"
+
 
 def approve_products(modeladmin, request, queryset):
     queryset.update(is_approved=True, is_active=True, approval_status="Approved")
+    for product in queryset:
+        AdminLog.objects.create(
+            admin=request.user,
+            action_type="Approve Product",
+            target_type="Product",
+            target_id=product.id,
+        )
 approve_products.short_description = "Approve selected products"
+
 
 def deny_products(modeladmin, request, queryset):
     queryset.update(is_approved=False, is_active=False, approval_status="Rejected")
+    for product in queryset:
+        AdminLog.objects.create(
+            admin=request.user,
+            action_type="Deny Product",
+            target_type="Product",
+            target_id=product.id,
+        )
 deny_products.short_description = "Deny selected products"
 
+
 def approve_returns(modeladmin, request, queryset):
-    queryset.update(status='Approved')
+    with transaction.atomic():
+        for return_request in queryset.select_related("order_item__order"):
+            return_request.status = "Approved"
+            return_request.save(update_fields=["status"])
+
+            order_item = return_request.order_item
+            order_item.status = "Returned"
+            order_item.save(update_fields=["status"])
+
+            Payment.objects.filter(
+                order=order_item.order,
+                payment_status="Completed"
+            ).update(payment_status="Refunded")
+
+            AdminLog.objects.create(
+                admin=request.user,
+                action_type="Approve Return",
+                target_type="ReturnRequest",
+                target_id=return_request.id,
+            )
 approve_returns.short_description = "Approve selected returns"
 
+
 def deny_returns(modeladmin, request, queryset):
-    queryset.update(status='Denied')
+    with transaction.atomic():
+        for return_request in queryset:
+            return_request.status = "Denied"
+            return_request.save(update_fields=["status"])
+
+            AdminLog.objects.create(
+                admin=request.user,
+                action_type="Deny Return",
+                target_type="ReturnRequest",
+                target_id=return_request.id,
+            )
 deny_returns.short_description = "Deny selected returns"
 
 
 # --- Inlines ---
-
-class ProductInline(admin.TabularInline):
-    model = Product
-    extra = 0
-    fields = ('name', 'price', 'stock', 'is_approved', 'is_active', 'approval_status')
-
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
@@ -54,16 +111,15 @@ class CartItemInline(admin.TabularInline):
     fields = ('product', 'quantity')
 
 
-# --- UserAccount Admin ---
+# --- User Admin ---
 
 class UserAccountAdmin(UserAdmin):
-    inlines = [ProductInline]
     actions = [approve_users, deny_users]
-    list_display = ('username', 'email', 'is_seller', 'is_buyer', 'is_approved', 'is_staff')
-    list_filter = ('is_seller', 'is_buyer', 'is_approved', 'is_staff')
+    list_display = ('username', 'email', 'role', 'is_staff')
+    list_filter = ('role', 'is_staff')
     search_fields = ('username', 'email')
     fieldsets = UserAdmin.fieldsets + (
-        ('Custom Fields', {'fields': ('is_approved', 'is_seller', 'is_buyer')}),
+        ('Custom Fields', {'fields': ('role',)}),
     )
 
 
@@ -141,7 +197,7 @@ class FeeAdmin(admin.ModelAdmin):
 
 # --- Register All ---
 
-admin.site.register(UserAccount, UserAccountAdmin)
+admin.site.register(User, UserAccountAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Order, OrderAdmin)

@@ -124,10 +124,9 @@ class Payment(models.Model):
 
 
 class Payout(models.Model):
-    STATUS_CHOICES = [("Pending", "Pending"), ("Paid", "Paid"),]
-
-    seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="payouts",)
-    order_item = models.ForeignKey("OrderItem", on_delete=models.CASCADE,related_name="payouts",)
+    STATUS_CHOICES = [("Pending", "Pending"),("Paid", "Paid"),("Refunded", "Refunded"),]
+    seller = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name="payouts",)
+    order_item = models.ForeignKey("OrderItem",on_delete=models.CASCADE,related_name="payouts",)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
     created_at = models.DateTimeField(auto_now_add=True)

@@ -20,7 +20,7 @@ def cart_details(request):
     cart_items = CartItem.objects.filter(cart=cart).select_related("product")
     subtotal = sum(item.product.price * item.quantity for item in cart_items)
     item_count = sum(item.quantity for item in cart_items)
-    tax = subtotal * Decimal("0.07") if subtotal else Decimal("0.00")
+    tax = subtotal * Decimal("0.10") if subtotal else Decimal("0.00")
     total = subtotal + tax
 
     return render(

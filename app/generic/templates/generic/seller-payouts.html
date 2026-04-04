@@ -3,27 +3,66 @@
 {% block title %}Seller Payouts{% endblock %}
 
 {% block content %}
-<h2>Your Earnings</h2>
-<p><strong>Total Earned:</strong> ${{ total|floatformat:2 }}</p>
+<div class="container my-4">
+  <h2>Your Earnings</h2>
 
-<table class="table">
-  <thead>
-    <tr>
-      <th>Order</th>
-      <th>Product</th>
-      <th>Amount</th>
-      <th>Date</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for payout in payouts %}
-    <tr>
-      <td>#{{ payout.order_item.order.id }}</td>
-      <td>{{ payout.order_item.product.name }}</td>
-      <td>${{ payout.amount }}</td>
-      <td>{{ payout.created_at }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+  <p>
+    <strong>Total Earned:</strong>
+    ${{ total|floatformat:2 }}
+  </p>
+
+  <table class="table table-striped align-middle">
+    <thead>
+      <tr>
+        <th>Order</th>
+        <th>Product</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for payout in payouts %}
+      <tr>
+        <td>#{{ payout.order_item.order.id }}</td>
+
+        <td>{{ payout.order_item.product.name }}</td>
+
+        <td>
+          {% if payout.status == "Refunded" %}
+            <span class="text-danger">$0.00</span>
+          {% else %}
+            ${{ payout.amount|floatformat:2 }}
+          {% endif %}
+        </td>
+
+        <td>
+          {% if payout.status == "Paid" %}
+            <span class="badge bg-success">Paid</span>
+          {% elif payout.status == "Pending" %}
+            <span class="badge bg-warning text-dark">Pending</span>
+          {% elif payout.status == "Refunded" %}
+            <span class="badge bg-danger">Refunded</span>
+          {% else %}
+            <span class="badge bg-secondary">{{ payout.status }}</span>
+          {% endif %}
+        </td>
+
+        <td>{{ payout.created_at|date:"M d, Y" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="text-center text-muted">
+          No payouts yet.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <a class="btn btn-outline-secondary" href="{% url 'sellerInventory' %}">
+    Back to Dashboard
+  </a>
+</div>
 {% endblock %}

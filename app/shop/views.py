@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import ProtectedError, Sum
 from django.contrib.auth import get_user_model
 from decimal import Decimal
-from .models import Product, Payout, Address, Order, Category, OrderItem, Payment, Cart, CartItem, Fee, ReturnRequest
+from .models import Product, Payout, Address, Order, Category, OrderItem, Payment, Cart, CartItem, Fee, ReturnRequest, AdminLog
 from .forms import ProductForm
 from cart.views import Cart, CartItem
 from accounts.models import User
@@ -95,11 +95,19 @@ def adminCatalog(request):
     elif active_status == "inactive":
         products = products.filter(is_active=False)
 
-    return render(request,"generic/admin-catalog.html",{"products": products},)
+    return render(request,"generic/admincatalog.html",{"products": products},)
 
 
+#wired admin to UI-madee
+@login_required
 def adminModeration(request):
-    return render(request, "generic/adminModeration.html")
+    if request.user.role != "admin":
+        return redirect("home")
+
+    pending_products = Product.objects.filter(approval_status="Pending").select_related("seller", "category")
+    pending_returns = ReturnRequest.objects.filter(status="Pending").select_related("buyer", "order_item", "order_item__product", "order_item__seller", "order_item__order")
+    pending_users = User.objects.filter(is_approved=False)
+    return render( request, "generic/adminModeration.html", {"pending_products": pending_products, "pending_returns": pending_returns, "pending_users": pending_users,},)
 
 def orderConf(request):
     return render(request, "generic/orderConf.html")
@@ -130,7 +138,7 @@ def returns(request):
 
 
 @login_required
-def returnReq(request):
+def returnReq(request): #rewrote to include tax in the return amount
     order_item_id = request.GET.get("order_item_id") or request.POST.get("order_item_id")
     order_item = get_object_or_404(OrderItem, id=order_item_id, order__buyer=request.user)
 
@@ -141,16 +149,14 @@ def returnReq(request):
     if request.method == "POST":
         reason = request.POST.get("reason", "").strip()
         if reason:
-            ReturnRequest.objects.create(
-                buyer=request.user,
-                order_item=order_item,
-                reason=reason,
-                status="Pending",
-                refund_amount=order_item.price_at_purchase * order_item.quantity,
-            )
+            item_subtotal = order_item.price_at_purchase * order_item.quantity
+            refund_amount = item_subtotal * Decimal("1.10") 
+
+            ReturnRequest.objects.create(buyer=request.user, order_item=order_item, reason=reason, status="Pending", refund_amount=refund_amount,)
             return redirect("returns")
 
     return render(request, "generic/returnReq.html", {"order_item": order_item})
+
 @login_required
 def sellerInventory(request): 
     if request.user.role != "seller":
@@ -170,29 +176,25 @@ def sellerProducts(request, pk):
 
 
 @login_required
-def createProd(request): #made this because I made a new-item page for sellers
+def createProd(request):
     if request.user.role != "seller":
         return redirect("home")
 
-    if request.method == 'POST':
-        form = ProductForm(request.POST)
+    if request.method == "POST":
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
             product.seller = request.user
             product.is_approved = False
-            product.approval_status = "Pending" #product has to have admin approval
+            product.approval_status = "Pending"
             product.orbit_int = True
             product.redirect_int = None
             product.deleted_at = None
-            # Check whether it's valid and save the data
             product.save()
-            #html page for sellers will be created then linked to this
             return redirect("sellerInventory")
     else:
-        # any other request method creates an empty form
-        form = ProductForm(request.POST, request.FILES)
-        
-    # pull up html page- needs to be named
+        form = ProductForm()
+
     return render(request, "generic/new-item.html", {"form": form})
 
 @login_required
@@ -200,7 +202,7 @@ def editProd(request, pk):
     if request.user.role != "seller":
         return redirect("home")
     
-    product = get_object_or_404(Product, pk=pk, seller=request.user, deleted_at__isnull=True,)
+    product = get_object_or_404(Product, pk=pk, seller=request.user, deleted_at__isnull=True)
     categories = Category.objects.all()
     
     if request.method == "POST":
@@ -224,6 +226,7 @@ def editProd(request, pk):
                 new_category_id = int(new_category_id)
             except ValueError:
                 new_category_id = None
+
         new_category = product.category
         if new_category_id is not None:
             new_category = Category.objects.filter(pk=new_category_id).first()
@@ -235,16 +238,25 @@ def editProd(request, pk):
 
         visibility_changed = new_orbit != product.orbit_int
         stock_changed = new_stock != product.stock
+        price_changed = new_price != product.price
 
-        other_fields_changed = any([new_name != product.name,new_description != product.description,new_price != product.price,new_category != product.category,photo_changed,])
+        other_fields_changed = any([
+            new_name != product.name,
+            new_description != product.description,
+            new_category != product.category,
+            photo_changed,
+        ])
 
-        # Only stock/visibility updates happen on the same row.
         if not other_fields_changed:
             updated_fields = []
 
             if stock_changed:
                 product.stock = new_stock
                 updated_fields.append("stock")
+
+            if price_changed:
+                product.price = new_price
+                updated_fields.append("price")
 
             if visibility_changed:
                 product.orbit_int = new_orbit
@@ -255,18 +267,27 @@ def editProd(request, pk):
 
             return redirect("sellerInventory")
 
-        # All other edits create a new row and redirect the old row to it.
         with transaction.atomic():
-            new_product = Product.objects.create(seller=product.seller,category=new_category,name=new_name,description=new_description,price=new_price,stock=new_stock,photo= new_photo if new_photo else product.photo, is_active=True,is_approved=False,approval_status="Pending",orbit_int=True,)
-            if product is not None:
-              product.redirect_int  = new_product # type: ignore[assignment]
+            new_product = Product.objects.create(
+                seller=product.seller,
+                category=new_category,
+                name=new_name,
+                description=new_description,
+                price=new_price,
+                stock=new_stock,
+                photo=new_photo if new_photo else product.photo,
+                is_active=True,
+                is_approved=False,
+                approval_status="Pending",
+                orbit_int=True,
+            )
+            product.redirect_int = new_product # type: ignore[assignment]
             product.orbit_int = False
             product.save(update_fields=["redirect_int", "orbit_int"])
 
         return redirect("sellerInventory")
 
     return render(request, "generic/edit-item.html", {"product": product, "categories": categories})
-
   
 @login_required
 def delistProd(request, pk):
@@ -551,11 +572,112 @@ def sellerPayouts(request):
     if request.user.role != "seller":
         return redirect("home")
 
-    payouts = Payout.objects.filter(seller=request.user).select_related("order_item", "order_item__order", "order_item__product").order_by("-created_at")
+    payouts = Payout.objects.filter(seller=request.user).select_related("order_item","order_item__order","order_item__product").order_by("-created_at")
 
-    total = payouts.aggregate(total=Sum("amount"))["total"] or 0
+    total = payouts.exclude(status="Refunded").aggregate(total=Sum("amount"))["total"] or 0
 
-    return render(
-        request,"generic/seller-payouts.html", {"payouts": payouts,"total": total,},)
+    return render(request,"generic/seller-payouts.html",{"payouts": payouts,"total": total,},)
 
 
+#adding in admin logic-madee
+@login_required
+def approve_product(request, pk):
+    if request.user.role != "admin":
+        return redirect("home")
+
+    product = get_object_or_404(Product, pk=pk)
+    product.is_approved = True
+    product.is_active = True
+    product.approval_status = "Approved"
+    product.save(update_fields=["is_approved", "is_active", "approval_status"])
+    
+    AdminLog.objects.create(admin=request.user, action_type="Approve Product", target_type="Product", target_id=product.pk,)
+
+    return redirect("adminModeration")
+
+#adding in admin logic- madee
+@login_required
+def deny_product(request, pk):
+    if request.user.role != "admin":
+        return redirect("home")
+
+    product = get_object_or_404(Product, pk=pk)
+    product.is_approved = False
+    product.is_active = False
+    product.approval_status = "Rejected"
+    product.save(update_fields=["is_approved", "is_active", "approval_status"])
+
+    AdminLog.objects.create( admin=request.user, action_type="Deny Product", target_type="Product", target_id=product.pk,)
+
+    return redirect("adminModeration")
+
+#adding in admin logic- madee
+@login_required
+def approve_return(request, pk):
+    if request.user.role != "admin":
+        return redirect("home")
+
+    return_request = get_object_or_404(ReturnRequest, pk=pk)
+
+    with transaction.atomic():
+        return_request.status = "Approved"
+        return_request.save(update_fields=["status"])
+
+        order_item = return_request.order_item
+        order_item.status = "Returned"
+        order_item.save(update_fields=["status"])
+
+        Payment.objects.filter(order=order_item.order,payment_status="Completed").update(payment_status="Refunded")
+
+        payout = Payout.objects.filter(order_item=order_item).first()
+        if payout:
+            payout.amount = Decimal("0.00")
+            payout.status = "Refunded"
+            payout.save(update_fields=["amount", "status"])
+
+        AdminLog.objects.create(admin=request.user,action_type="Approve Return",target_type="ReturnRequest",target_id=return_request.pk,)
+
+    return redirect("adminModeration")
+
+#adding in admin logic- madee
+@login_required
+def deny_return(request, pk):
+    if request.user.role != "admin":
+        return redirect("home")
+
+    return_request = get_object_or_404(ReturnRequest, pk=pk)
+
+    with transaction.atomic():
+        return_request.status = "Denied"
+        return_request.save(update_fields=["status"])
+
+        AdminLog.objects.create( admin=request.user, action_type="Deny Return", target_type="ReturnRequest", target_id=return_request.pk,)
+
+    return redirect("adminModeration")
+
+#adding in admin logic- madee
+@login_required
+def approve_user(request, pk):
+    if request.user.role != "admin":
+        return redirect("home")
+
+    user = get_object_or_404(User, pk=pk)
+    user.is_approved = True
+    user.save(update_fields=["is_approved"])
+
+    AdminLog.objects.create(admin=request.user, action_type="Approve User", target_type="User",target_id=user.pk,)
+
+    return redirect("adminModeration")
+
+#adding in admin logic- madee
+@login_required
+def deny_user(request, pk):
+    if request.user.role != "admin":
+        return redirect("home")
+
+    user = get_object_or_404(User, pk=pk)
+    user.delete()  
+
+    AdminLog.objects.create(admin=request.user, action_type="Deny User", target_type="User", target_id=user.pk,)
+
+    return redirect("adminModeration")

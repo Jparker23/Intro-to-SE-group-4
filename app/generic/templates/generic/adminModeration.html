@@ -1,12 +1,140 @@
 {% extends "generic/base.html" %}
 
-{% block title %}AdminModeration{% endblock %}
+{% block title %}Admin Moderation{% endblock %}
 
 {% block content %}
 <div class="container my-4">
-    <h2>Admin Moderation</h2>
-    <p>This should be the admin page to approve and deny accounts and products and make sure </p>
-    <div class="card p-3 mb-3">Pending products list placeholder</div>
-  <a class="btn btn-outline-secondary" href="/api/home/">Back to home</a>
+  <h2>Admin Moderation</h2>
+  <p class="text-muted">Review pending products and return requests.</p>
+
+  <div class="mb-5">
+    <h4 class="mb-3">Pending Products</h4>
+
+    {% if pending_products %}
+      {% for product in pending_products %}
+        <div class="card p-3 mb-3 shadow-sm">
+          <div class="d-flex justify-content-between flex-wrap">
+            <div>
+              <h5 class="mb-1">{{ product.name }}</h5>
+              <p class="mb-1 text-muted">{{ product.description }}</p>
+              <p class="mb-1"><strong>Seller:</strong> {{ product.seller.username }}</p>
+              <p class="mb-1">
+                <strong>Category:</strong>
+                {% if product.category %}
+                  {{ product.category.name }}
+                {% else %}
+                  None
+                {% endif %}
+              </p>
+            </div>
+
+            <div class="text-end">
+              <p class="mb-1"><strong>Price:</strong> ${{ product.price|floatformat:2 }}</p>
+              <p class="mb-1"><strong>Stock:</strong> {{ product.stock }}</p>
+              <p class="mb-1"><strong>Status:</strong> {{ product.approval_status }}</p>
+            </div>
+          </div>
+
+          {% if product.photo %}
+            <div class="mt-3">
+              <img
+                src="{{ product.photo.url }}"
+                alt="{{ product.name }}"
+                class="img-fluid rounded"
+                style="max-height: 200px;"
+              >
+            </div>
+          {% endif %}
+
+          <div class="d-flex gap-2 mt-3">
+            <a href="{% url 'approve_product' product.pk %}" class="btn btn-success btn-sm">
+              Approve
+            </a>
+            <a href="{% url 'deny_product' product.pk %}" class="btn btn-danger btn-sm">
+              Deny
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="card p-3 mb-3">
+        <p class="mb-0 text-muted">No pending products to review.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="mb-4">
+    <h4 class="mb-3">Pending Return Requests</h4>
+
+    {% if pending_returns %}
+      {% for ret in pending_returns %}
+        <div class="card p-3 mb-3 shadow-sm">
+          <div class="d-flex justify-content-between flex-wrap">
+            <div>
+              <h5 class="mb-1">{{ ret.order_item.product.name }}</h5>
+              <p class="mb-1"><strong>Buyer:</strong> {{ ret.buyer.username }}</p>
+              <p class="mb-1"><strong>Seller:</strong> {{ ret.order_item.seller.username }}</p>
+              <p class="mb-1"><strong>Reason:</strong> {{ ret.reason }}</p>
+              <p class="mb-1 text-muted">
+                Requested on {{ ret.created_at|date:"M d, Y" }}
+              </p>
+            </div>
+
+            <div class="text-end">
+              <p class="mb-1"><strong>Quantity:</strong> {{ ret.order_item.quantity }}</p>
+              <p class="mb-1"><strong>Refund Amount:</strong> ${{ ret.refund_amount|floatformat:2 }}</p>
+              <p class="mb-1"><strong>Status:</strong> {{ ret.status }}</p>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 mt-3">
+            <a href="{% url 'approve_return' ret.pk %}" class="btn btn-success btn-sm">
+              Approve Return
+            </a>
+            <a href="{% url 'deny_return' ret.pk %}" class="btn btn-danger btn-sm">
+              Deny Return
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="card p-3 mb-3">
+        <p class="mb-0 text-muted">No pending return requests.</p>
+      </div>
+    {% endif %}
+  </div>
+<div class="mb-5">
+  <h4 class="mb-3">Pending User Accounts</h4>
+
+  {% if pending_users %}
+    {% for user in pending_users %}
+      <div class="card p-3 mb-3 shadow-sm">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h5 class="mb-1">{{ user.username }}</h5>
+            <p class="mb-1 text-muted">{{ user.email }}</p>
+            <p class="mb-1"><strong>Role:</strong> {{ user.role }}</p>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'approve_user' user.pk %}" class="btn btn-success btn-sm">
+              Approve
+            </a>
+            <a href="{% url 'deny_user' user.pk %}" class="btn btn-danger btn-sm">
+              Deny
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="card p-3">
+      <p class="mb-0 text-muted">No pending users.</p>
+    </div>
+  {% endif %}
+</div>
+  <a class="btn btn-outline-secondary" href="{% url 'home' %}">
+    Back to Home
+  </a>
 </div>
 {% endblock %}

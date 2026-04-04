@@ -16,12 +16,10 @@
       <a href="{% url 'cart:cart_details' %}" class="iconBtn">
         <i class="fa fa-shopping-cart"></i>
       </a>
-
     {% elif request.user.is_authenticated %}
       <a class="LoginContainer" href="{% url 'account' %}">
         <i class="fa fa-user"></i><span>Account</span>
       </a>
-
     {% else %}
       <a class="LoginContainer" href="{% url 'login' %}">
         <i class="fa fa-user"></i><span>Login</span>
@@ -156,91 +154,106 @@
         <small class="text-muted">{{ products|length }} items found</small>
       </div>
 
-      <form method="get" action="{% url 'compare' %}">
-        <div class="row g-4">
-          {% for product in products %}
-            <div class="col-md-6 col-xl-4">
-              <div class="card productCard h-100 shadow-sm">
-                <a href="{% url 'prod_details' product.pk %}" style="text-decoration: none; color: inherit;">
-                  {% if product.photo %}
-                    <img
-                      src="{{ product.photo.url }}"
-                      alt="{{ product.name }}"
-                      class="card-img-top"
-                      style="height: 230px; object-fit: cover;"
-                    >
-                  {% else %}
-                    <div class="photoPlaceholder d-flex align-items-center justify-content-center" style="height: 230px;">
-                      Photo
-                    </div>
+      <div class="row g-4">
+        {% for product in products %}
+          <div class="col-md-6 col-xl-4">
+            <div class="card productCard h-100 shadow-sm">
+              <a href="{% url 'prod_details' product.pk %}" style="text-decoration: none; color: inherit;">
+                {% if product.photo %}
+                  <img
+                    src="{{ product.photo.url }}"
+                    alt="{{ product.name }}"
+                    class="card-img-top"
+                    style="height: 230px; object-fit: cover;"
+                  >
+                {% else %}
+                  <div class="photoPlaceholder d-flex align-items-center justify-content-center" style="height: 230px;">
+                    Photo
+                  </div>
+                {% endif %}
+
+                <div class="card-body">
+                  {% if product.category %}
+                    <span class="badge bg-dark mb-2">{{ product.category.name }}</span>
                   {% endif %}
 
-                  <div class="card-body">
-                    {% if product.category %}
-                      <span class="badge bg-dark mb-2">{{ product.category.name }}</span>
+                  <h5 class="card-title mb-1">{{ product.name }}</h5>
+                  <p class="text-muted mb-2">{{ product.seller.username }}</p>
+
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>${{ product.price }}</strong>
+                    {% if product.stock == 0 %}
+                      <small class="text-danger">Out of stock</small>
+                    {% else %}
+                      <small class="text-muted">{{ product.stock }} left</small>
                     {% endif %}
-
-                    <h5 class="card-title mb-1">{{ product.name }}</h5>
-                    <p class="text-muted mb-2">{{ product.seller.username }}</p>
-
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <strong>${{ product.price }}</strong>
-                      {% if product.stock == 0 %}
-                        <small class="text-danger">Out of stock</small>
-                      {% else %}
-                        <small class="text-muted">{{ product.stock }} left</small>
-                      {% endif %}
-                    </div>
-                  </div>
-                </a>
-
-                <div class="card-body pt-0">
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="compare"
-                      value="{{ product.pk }}"
-                      id="compare{{ product.pk }}"
-                    >
-                    <label class="form-check-label" for="compare{{ product.pk }}">
-                      Compare
-                    </label>
                   </div>
                 </div>
+              </a>
 
-                <div class="card-footer bg-white border-0 pt-0">
-                  <div class="d-grid gap-2">
-                    <a href="{% url 'prod_details' product.pk %}" class="btn btn-danger">View Item</a>
+              <div class="card-body pt-0">
+                <div class="form-check">
+                  <input
+                    class="form-check-input compare-checkbox"
+                    type="checkbox"
+                    value="{{ product.pk }}"
+                    id="compare{{ product.pk }}"
+                  >
+                  <label class="form-check-label" for="compare{{ product.pk }}">
+                    Compare
+                  </label>
+                </div>
+              </div>
 
-                    {% if request.user.is_authenticated and request.user.role == "buyer" %}
-                      <form method="post" action="{% url 'cart:add_to_cart' product.pk %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="quantity" value="1">
-                        <button class="btn btn-outline-primary w-100" type="submit">Add to Cart</button>
-                      </form>
+              <div class="card-footer bg-white border-0 pt-0">
+                <div class="d-grid gap-2">
+                  <a href="{% url 'prod_details' product.pk %}" class="btn btn-danger">View Item</a>
 
-                    {% elif not request.user.is_authenticated %}
-                      <a href="{% url 'login' %}" class="btn btn-outline-primary">Login to Add to Cart</a>
-                    {% endif %}
-                  </div>
+                  {% if request.user.is_authenticated and request.user.role == "buyer" %}
+                    <form method="post" action="{% url 'cart:add_to_cart' product.pk %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="quantity" value="1">
+                      <button class="btn btn-outline-primary w-100" type="submit">Add to Cart</button>
+                    </form>
+                  {% elif not request.user.is_authenticated %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary">Login to Add to Cart</a>
+                  {% endif %}
                 </div>
               </div>
             </div>
-          {% empty %}
-            <div class="col-12 text-center text-muted py-5">
-              No products matched your search.
-            </div>
-          {% endfor %}
-        </div>
-
-        {% if products %}
-          <div class="d-flex justify-content-end mt-4">
-            <button type="submit" class="btn btn-dark">Compare Selected</button>
           </div>
-        {% endif %}
-      </form>
+        {% empty %}
+          <div class="col-12 text-center text-muted py-5">
+            No products matched your search.
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if products %}
+        <div class="d-flex justify-content-end mt-4">
+          <button type="button" class="btn btn-dark" onclick="submitCompare()">Compare Selected</button>
+        </div>
+      {% endif %}
     </div>
   </div>
 </div>
+
+<script>
+  function submitCompare() {
+    const checked = document.querySelectorAll(".compare-checkbox:checked");
+
+    if (checked.length === 0) {
+      alert("Please select at least one item to compare.");
+      return;
+    }
+
+    const params = new URLSearchParams();
+
+    checked.forEach((checkbox) => {
+      params.append("compare", checkbox.value);
+    });
+
+    window.location.href = "{% url 'compare' %}?" + params.toString();
+  }
+</script>
 {% endblock %}

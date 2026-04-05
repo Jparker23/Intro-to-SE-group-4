@@ -18,9 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.shortcuts import redirect
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 
 urlpatterns = [
+    path("", lambda request: redirect("home")),
     path('admin/', admin.site.urls),
     path('api/', include('shop.urls')),
     path("api/auth/", include("accounts.urls")),

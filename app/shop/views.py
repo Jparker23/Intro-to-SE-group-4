@@ -10,7 +10,7 @@ from accounts.models import User
 from django.db import transaction
 from django.utils import timezone
 from django.contrib import messages
-from django.core.mail import send_mail
+import resend
 from django.conf import settings
 from django.views.decorators.cache import never_cache
 
@@ -686,17 +686,18 @@ def approve_user(request, pk):
     user = get_object_or_404(User, pk=pk)
 
     user.is_approved = True
-    user.save()
+    user.save(update_fields=["is_approved"])
 
-    send_mail(
-        subject="Your Amplify account has been approved",
-        message=(f"Hello {user.username},\n\n" "Your account has been approved. You can now log in to the site.\n\n" "Thank you.- Amplify Team"),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=False,
-    )
+    if settings.RESEND_API_KEY and user.email:
+        try:
+            resend.api_key = settings.RESEND_API_KEY
+            resend.Emails.send({"from": settings.RESEND_FROM_EMAIL, "to": [user.email], "subject": "Your Amplify account has been approved", "text": ( f"Hello {user.username},\n\n" "Your account has been approved. You can now log in to the site.\n\n" "Thank you,\n" "Amplify Team"),})
+            messages.success(request, f"{user.username} was approved and notified by email.")
+        except Exception as e:
+            messages.warning(request, f"{user.username} was approved, but the email could not be sent: {e}")
+    else:
+        messages.warning(request, f"{user.username} was approved, but Resend is not configured.")
 
-    messages.success(request, f"{user.username} was approved and notified by email.")
     return redirect("adminModeration")
 
 #adding in admin logic- madee

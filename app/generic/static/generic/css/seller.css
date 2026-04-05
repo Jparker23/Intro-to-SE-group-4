@@ -77,3 +77,35 @@ body {
   color: #046582;
   font-weight: bold;
 }
+
+@media (max-width: 767.98px) {
+  .title {
+    font-size: 1.9rem;
+  }
+
+  .topRight {
+    position: static !important;
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+  }
+
+  .tabbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .dashTab {
+    width: 100%;
+  }
+
+  .search {
+    width: 100%;
+  }
+
+  .table-responsive {
+    border: 0;
+  }
+}

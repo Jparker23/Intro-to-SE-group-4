@@ -265,3 +265,137 @@ body {
   line-height: 1.3;
 }
 
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.topRight {
+  position: static !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.iconRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.LoginContainer,
+.iconBtn,
+.catalogButton {
+  white-space: nowrap;
+}
+
+.search {
+  width: 100%;
+}
+
+.search .form-control {
+  min-width: 0;
+}
+
+.photoPlaceholder {
+  width: 100%;
+}
+
+.productCard {
+  height: 100%;
+}
+
+.productCard .card-footer .btn,
+.productCard .card-footer form,
+.productCard .card-footer a {
+  width: 100%;
+}
+
+.brandbar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
+}
+
+.sidenav a {
+  font-size: 1rem;
+}
+
+
+@media (max-width: 991.98px) {
+  .title {
+    font-size: 2rem;
+    text-align: center;
+  }
+
+  .prodPage {
+    font-size: 1.6rem;
+  }
+
+  .container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* ---------- phone ---------- */
+@media (max-width: 767.98px) {
+  .title {
+    font-size: 1.9rem;
+  }
+
+  .prodPage {
+    font-size: 1.4rem;
+  }
+
+  .menuIcon {
+    top: 12px;
+    left: 12px;
+    transform: scale(0.9);
+  }
+
+  .topRight {
+    margin-top: 16px;
+  }
+
+  .LoginContainer {
+    padding: 10px 14px;
+    font-size: 0.95rem;
+  }
+
+  .iconBtn {
+    font-size: 1.2rem;
+  }
+
+  .brandHdrContainer {
+    margin-top: 8px;
+  }
+
+  .catalogButton {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .searchIcon {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .card-body,
+  .card-footer,
+  section.bg-white {
+    padding: 1rem !important;
+  }
+
+  .list-group-item,
+  .btn {
+    font-size: 0.95rem;
+  }
+}

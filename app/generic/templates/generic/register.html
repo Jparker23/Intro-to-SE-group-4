@@ -7,29 +7,31 @@
   
   <div class="card">
     <div class="card-body">
-      <form method="post" action="{% url 'register' %}">
+      <form method="post" action="{% url 'register' %}" autocomplete="off">
         {% csrf_token %}
         
         <div class="mb-3">
           <label class="form-label">First Name</label>
-          <input class="form-control" name="first_name" value="{{ data.first_name|default:'' }}" required>
+          <input class="form-control" name="first_name" value="{{ data.first_name|default:'' }}" autocomplete="off" required>
           {% if errors.first_name %}<div class="text-danger small">{{ errors.first_name.0 }}</div>{% endif %}
         </div>
         
         <div class="mb-3">
           <label class="form-label">Last Name</label>
-          <input class="form-control" name="last_name" value="{{ data.last_name|default:'' }}" required>
+          <input class="form-control" name="last_name" value="{{ data.last_name|default:'' }}" autocomplete="off" required>
           {% if errors.last_name %}<div class="text-danger small">{{ errors.last_name.0 }}</div>{% endif %}
         </div>
         
         <div class="mb-3">
           <label class="form-label">Username</label>
-          <input class="form-control" name="username" required>
+          <input class="form-control" name="username" value="{{ data.username|default:'' }}" autocomplete="off" required>
+          {% if errors.username %}<div class="text-danger small">{{ errors.username.0 }}</div>{% endif %}
         </div>
         
         <div class="mb-3">
           <label class="form-label">Email</label>
-          <input class="form-control" name="email" type="email" >
+          <input class="form-control" name="email" type="email" value="{{ data.email|default:'' }}" autocomplete="off">
+          {% if errors.email %}<div class="text-danger small">{{ errors.email.0 }}</div>{% endif %}
         </div>
         
         <div class="mb-3">
@@ -43,30 +45,25 @@
         
         <div class="mb-3">
           <label class="form-label">Password</label>
-          <input class="form-control" name="password" type="password" minlength="8" required>
-          
+          <input class="form-control" name="password" type="password" minlength="8" autocomplete="new-password" required>
           {% if errors.password %}
-          <div class="alert alert-danger mt-2">
-            {{ errors.password.0 }}
-          </div>
+          <div class="alert alert-danger mt-2">{{ errors.password.0 }}</div>
           {% endif %}
         </div>
         
         <div class="mb-3">
           <label class="form-label">Confirm Password</label>
-          <input class="form-control" name="pswrdAgain" type="password" minlength="8" required>
+          <input class="form-control" name="pswrdAgain" type="password" minlength="8" autocomplete="new-password" required>
           {% if errors.pswrdAgain %}
-          <div class="alert alert-danger mt-2">
-            {{ errors.pswrdAgain.0 }}
-          </div>
+          <div class="alert alert-danger mt-2">{{ errors.pswrdAgain.0 }}</div>
           {% endif %}
         </div>
         
-        <button class="btn btn-primary w-100" type="submit" href="{% url 'home' %}">Register</button>
+        <button class="btn btn-primary w-100" type="submit">Register</button>
       </form>
       
       <div class="text-center mt-3">
-        <a href="{% url 'login' %}" >Already have an account? Login</a>
+        <a href="{% url 'login' %}">Already have an account? Login</a>
       </div>
     </div>
   </div>

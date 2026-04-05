@@ -44,4 +44,7 @@ urlpatterns = [
     path("admin/returns/<int:pk>/deny/", deny_return, name="deny_return"),
     path("admin/users/<int:pk>/approve/", approve_user, name="approve_user"),
     path("admin/users/<int:pk>/deny/", deny_user, name="deny_user"),
+
+
+   
 ]

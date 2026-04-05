@@ -21,9 +21,8 @@ class accountView(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
-
-@login_required(login_url="login")
 @never_cache
+@login_required(login_url="login")
 def account(request):
     user = cast(User, request.user)
 
@@ -73,10 +72,13 @@ def loginpg(request):
 @never_cache
 def logoutpg(request):
     logout(request)
-    response = render(request, "generic/logout.html")
+    request.session.flush()
+    response = redirect("login")
     response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response["Pragma"] = "no-cache"
     response["Expires"] = "0"
+    response.delete_cookie("sessionid")
+    response.delete_cookie("csrftoken")
     response.delete_cookie("access")
     response.delete_cookie("refresh")
     return response
@@ -88,7 +90,15 @@ def register(request):
     data = {}
 
     if request.method == "POST":
-        data = {"username": request.POST.get("username", "").strip(),"first_name": request.POST.get("first_name", "").strip(),"last_name": request.POST.get("last_name", "").strip(),"email": request.POST.get("email", "").strip(),"role": request.POST.get("role", "buyer"),"password": request.POST.get("password", ""), "pswrdAgain": request.POST.get("pswrdAgain", ""),}
+        data = {
+            "username": request.POST.get("username", "").strip(),
+            "first_name": request.POST.get("first_name", "").strip(),
+            "last_name": request.POST.get("last_name", "").strip(),
+            "email": request.POST.get("email", "").strip(),
+            "role": request.POST.get("role", "buyer"),
+            "password": request.POST.get("password", ""),
+            "pswrdAgain": request.POST.get("pswrdAgain", ""),
+        }
 
         serializer = RegisterSerializer(data=data)
 
@@ -104,12 +114,20 @@ def register(request):
 
             user.is_approved = False
             user.save(update_fields=["is_approved"])
-
-            return render(request,"generic/register.html",{"errors": {},"data": {},"success_message": "Account created successfully. Your account is pending admin approval.",},)
+            return redirect("pending_approval")
 
         print("REGISTER ERRORS:", serializer.errors)
         errors = serializer.errors
+
     response = render(request,"generic/register.html",{"errors": errors,"data": data,},)
+    response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response["Pragma"] = "no-cache"
+    response["Expires"] = "0"
+    return response
+
+@never_cache
+def pending_approval(request):
+    response = render(request, "generic/pending-approval.html")
     response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response["Pragma"] = "no-cache"
     response["Expires"] = "0"

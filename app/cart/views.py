@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.views.decorators.http import require_POST
 from shop.models import Product, Cart, CartItem
 from django.contrib.auth.decorators import login_required
-
+from django.views.decorators.cache import never_cache
 
 def buyer_required(view_func):
     def wrapper(request, *args, **kwargs):
@@ -13,6 +13,7 @@ def buyer_required(view_func):
     return wrapper
 
 
+@never_cache
 @login_required
 @buyer_required
 def cart_details(request):
@@ -36,6 +37,7 @@ def cart_details(request):
     )
 
 
+@never_cache
 @login_required
 @buyer_required
 @require_POST
@@ -55,6 +57,7 @@ def add_to_cart(request, product_id):
     return redirect(request.META.get("HTTP_REFERER", "/api/catalog/"))
 
 
+@never_cache
 @login_required
 @buyer_required
 @require_POST
@@ -64,7 +67,7 @@ def remove_from_cart(request, item_id):
     item.delete()
     return redirect("cart:cart_details")
 
-
+@never_cache
 @login_required
 @buyer_required
 @require_POST

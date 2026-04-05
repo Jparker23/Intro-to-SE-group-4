@@ -9,6 +9,10 @@ from cart.views import Cart, CartItem
 from accounts.models import User
 from django.db import transaction
 from django.utils import timezone
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+from django.views.decorators.cache import never_cache
 
 
 TAX_RATE_PERCENT = Decimal("10.00")
@@ -63,6 +67,7 @@ def buyer_only_catalog(request):
 
 
 #this is renders the catalog page that is for sellers, sellers will only see their own products, 
+@never_cache
 @login_required
 def adminCatalog(request):
     if request.user.role != "admin":
@@ -99,6 +104,7 @@ def adminCatalog(request):
 
 
 #wired admin to UI-madee
+@never_cache
 @login_required
 def adminModeration(request):
     if request.user.role != "admin":
@@ -112,13 +118,13 @@ def adminModeration(request):
 def orderConf(request):
     return render(request, "generic/orderConf.html")
 
-
+@never_cache
 @login_required
 def orders(request):
     user_orders = (Order.objects.filter(buyer=request.user).select_related("shipping_address").prefetch_related("items", "items__product", "items__seller", "payments", "fees").order_by("-created_at"))
 
     return render(request, "generic/orders.html", {"orders": user_orders,})
-
+@never_cache
 @login_required
 def sellerOrders(request):
     if request.user.role != "seller":
@@ -126,7 +132,7 @@ def sellerOrders(request):
     seller_orders = OrderItem.objects.filter(seller=request.user).select_related("order", "product", "order__buyer", "order__shipping_address").order_by("-order__created_at")
     return render(request, "generic/sellerOrders.html", {"seller_orders": seller_orders})
 
-
+@never_cache
 @login_required
 def returns(request):
     user_returns = ReturnRequest.objects.filter(
@@ -137,6 +143,7 @@ def returns(request):
     return render(request, "generic/returns.html", {"returns": user_returns})
 
 
+@never_cache
 @login_required
 def returnReq(request): #rewrote to include tax in the return amount
     order_item_id = request.GET.get("order_item_id") or request.POST.get("order_item_id")
@@ -157,6 +164,7 @@ def returnReq(request): #rewrote to include tax in the return amount
 
     return render(request, "generic/returnReq.html", {"order_item": order_item})
 
+@never_cache
 @login_required
 def sellerInventory(request): 
     if request.user.role != "seller":
@@ -174,7 +182,7 @@ def sellerProducts(request, pk):
     products = _buyer_visible_products().filter(seller=seller)
     return render(request, "generic/seller-products.html", {"products": products, "seller": seller})
 
-
+@never_cache
 @login_required
 def createProd(request):
     if request.user.role != "seller":
@@ -197,6 +205,7 @@ def createProd(request):
 
     return render(request, "generic/new-item.html", {"form": form})
 
+@never_cache
 @login_required
 def editProd(request, pk):
     if request.user.role != "seller":
@@ -289,6 +298,7 @@ def editProd(request, pk):
 
     return render(request, "generic/edit-item.html", {"product": product, "categories": categories})
   
+@never_cache
 @login_required
 def delistProd(request, pk):
     if request.user.role != "seller":
@@ -315,7 +325,7 @@ def prod_details(request, pk):
 
     return render(request, "generic/product.html", {"product": product})
 
-
+@never_cache
 @login_required
 def checkout(request):
     cart, _ = Cart.objects.get_or_create(buyer=request.user)
@@ -471,6 +481,7 @@ def checkout(request):
 
 
 #This is the address logic here, handles saving addresses to accounts, setting default shipping addresses, and deleting the addresses
+@never_cache
 @login_required
 def addresses(request):
     errors = {}
@@ -498,6 +509,7 @@ def addresses(request):
 
     return render(request, "generic/addresses.html", {"addresses": user_addresses,"errors": errors,})
 
+@never_cache
 @login_required
 def set_default_address(request, address_id):
     if request.method == "POST":
@@ -508,6 +520,7 @@ def set_default_address(request, address_id):
 
     return redirect("addresses")
 
+@never_cache
 @login_required
 def delete_address(request, address_id):
     if request.method == "POST":
@@ -520,6 +533,7 @@ def delete_address(request, address_id):
     return redirect("addresses")
 
 #this handles saved cards (debit credit cards)
+@never_cache
 @login_required
 def billing(request):
     errors = {}
@@ -549,6 +563,7 @@ def billing(request):
         saved_payments = Payment.objects.filter(user=request.user, is_saved=True).order_by("-is_default", "-payment_date")
     return render(request, "generic/billing.html", {"saved_payments": saved_payments,"errors": errors,})
 
+@never_cache
 @login_required
 def set_default_payment(request, payment_id):
     if request.method == "POST":
@@ -559,6 +574,7 @@ def set_default_payment(request, payment_id):
 
     return redirect("billing")
 
+@never_cache
 @login_required
 def delete_payment(request, payment_id):
     if request.method == "POST":
@@ -567,6 +583,7 @@ def delete_payment(request, payment_id):
 
     return redirect("billing")
 
+@never_cache
 @login_required
 def sellerPayouts(request):
     if request.user.role != "seller":
@@ -580,6 +597,7 @@ def sellerPayouts(request):
 
 
 #adding in admin logic-madee
+@never_cache
 @login_required
 def approve_product(request, pk):
     if request.user.role != "admin":
@@ -596,6 +614,7 @@ def approve_product(request, pk):
     return redirect("adminModeration")
 
 #adding in admin logic- madee
+@never_cache
 @login_required
 def deny_product(request, pk):
     if request.user.role != "admin":
@@ -612,6 +631,7 @@ def deny_product(request, pk):
     return redirect("adminModeration")
 
 #adding in admin logic- madee
+@never_cache
 @login_required
 def approve_return(request, pk):
     if request.user.role != "admin":
@@ -640,6 +660,7 @@ def approve_return(request, pk):
     return redirect("adminModeration")
 
 #adding in admin logic- madee
+@never_cache
 @login_required
 def deny_return(request, pk):
     if request.user.role != "admin":
@@ -656,20 +677,30 @@ def deny_return(request, pk):
     return redirect("adminModeration")
 
 #adding in admin logic- madee
+@never_cache
 @login_required
 def approve_user(request, pk):
     if request.user.role != "admin":
         return redirect("home")
 
     user = get_object_or_404(User, pk=pk)
+
     user.is_approved = True
-    user.save(update_fields=["is_approved"])
+    user.save()
 
-    AdminLog.objects.create(admin=request.user, action_type="Approve User", target_type="User",target_id=user.pk,)
+    send_mail(
+        subject="Your Amplify account has been approved",
+        message=(f"Hello {user.username},\n\n" "Your account has been approved. You can now log in to the site.\n\n" "Thank you.- Amplify Team"),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        fail_silently=False,
+    )
 
+    messages.success(request, f"{user.username} was approved and notified by email.")
     return redirect("adminModeration")
 
 #adding in admin logic- madee
+@never_cache
 @login_required
 def deny_user(request, pk):
     if request.user.role != "admin":
@@ -681,3 +712,4 @@ def deny_user(request, pk):
     AdminLog.objects.create(admin=request.user, action_type="Deny User", target_type="User", target_id=user.pk,)
 
     return redirect("adminModeration")
+

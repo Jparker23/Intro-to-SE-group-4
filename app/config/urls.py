@@ -33,5 +33,12 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
 ]
+#this is to cover error pages from users, just so users dont see ugly error pages
+handler404 = "config.views.custom_404"
+handler403 = "config.views.custom_403"
+handler500 = "config.views.custom_500"
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    
+

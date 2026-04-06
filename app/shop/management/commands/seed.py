@@ -51,6 +51,10 @@ class Command(BaseCommand):
             "email": "admin@test.com",
             "is_staff": True,
         })
+        admin.is_active = True
+        admin.is_staff = True
+        if hasattr(admin, "is_approved"):
+          admin.is_approved = True
         admin.set_password("password123")
         admin.save()
         
@@ -59,6 +63,10 @@ class Command(BaseCommand):
             "email": "admin1@test.com",
             "is_staff": True,
         })
+        admin.is_active = True
+        admin.is_staff = True
+        if hasattr(admin, "is_approved"):
+          admin.is_approved = True
         admin1.set_password("password123")
         admin1.save()
         
@@ -66,6 +74,10 @@ class Command(BaseCommand):
             "role": "buyer",
             "email": "buyer@test.com",
         })
+        buyer.role = "buyer"
+        buyer.is_active = True
+        if hasattr(buyer, "is_approved"):
+            buyer.is_approved = True
         buyer.set_password("password123")
         buyer.save()
         
@@ -73,6 +85,10 @@ class Command(BaseCommand):
             "role": "buyer",
             "email": "buyer1@test.com",
         })
+        buyer1.role = "buyer"
+        buyer1.is_active = True
+        if hasattr(buyer1, "is_approved"):
+            buyer1.is_approved = True
         buyer1.set_password("password123")
         buyer1.save()
         
@@ -80,6 +96,10 @@ class Command(BaseCommand):
             "role": "seller",
             "email": "seller@test.com",
         })
+        seller.role = "seller"
+        seller.is_active = True
+        if hasattr(seller, "is_approved"):
+            seller.is_approved = True
         seller.set_password("password123")
         seller.save()
         
@@ -87,6 +107,10 @@ class Command(BaseCommand):
             "role": "seller",
             "email": "seller1@test.com",
         })
+        seller1.role = "seller"
+        seller1.is_active = True
+        if hasattr(seller1, "is_approved"):
+            seller1.is_approved = True
         seller1.set_password("password123")
         seller1.save()
         

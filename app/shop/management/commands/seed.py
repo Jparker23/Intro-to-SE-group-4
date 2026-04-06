@@ -89,6 +89,15 @@ class Command(BaseCommand):
         seller1.set_password("password123")
         seller1.save()
         
+        product_defaults = dict(
+            is_active=True,
+            is_approved=True,
+            approval_status="Approved",
+            orbit_int=True,
+            redirect_int=None,
+            deleted_at=None,
+        )
+
         def create_product(name, seller_obj, category_obj, description, price, stock, image_key):
             product = Product.objects.create(
                 name=name,
@@ -97,7 +106,7 @@ class Command(BaseCommand):
                 description=description,
                 price=price,
                 stock=stock,
-                **product_defaults,
+                
             )
 
             image_path = seed_photo_dir / image_map[image_key]

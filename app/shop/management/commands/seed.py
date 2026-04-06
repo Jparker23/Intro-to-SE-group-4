@@ -92,9 +92,8 @@ class Command(BaseCommand):
         buyer1.set_password("password123")
         buyer1.save()
         
-        seller, _ = User.objects.get_or_create(username="testseller", defaults={
-            "role": "seller",
-            "email": "seller@test.com",
+        seller, _ = User.objects.get_or_create(username="VinylVault", defaults={
+        "email": "vinylvault@shop.com",
         })
         seller.role = "seller"
         seller.is_active = True
@@ -102,10 +101,9 @@ class Command(BaseCommand):
             seller.is_approved = True
         seller.set_password("password123")
         seller.save()
-        
-        seller1, _ = User.objects.get_or_create(username="testseller1", defaults={
-            "role": "seller",
-            "email": "seller1@test.com",
+
+        seller1, _ = User.objects.get_or_create(username="AudioHaven", defaults={
+            "email": "audiohaven@shop.com",
         })
         seller1.role = "seller"
         seller1.is_active = True
@@ -113,7 +111,7 @@ class Command(BaseCommand):
             seller1.is_approved = True
         seller1.set_password("password123")
         seller1.save()
-        
+                
         product_defaults = dict(
             is_active=True,
             is_approved=True,
@@ -144,74 +142,55 @@ class Command(BaseCommand):
             return product
 
         record1 = create_product(
-            name="record1",
+            name="Fleetwood Mac – Rumours (Vinyl)",
             seller_obj=seller,
             category_obj=record,
-            description="Autofilled example record product",
-            price=Decimal("10.99"),
-            stock=5,
+            description="Classic 1977 album featuring 'Dreams' and 'Go Your Own Way'. Pressed on high-quality 180g vinyl for superior sound.",
+            price=Decimal("24.99"),
+            stock=12,
             image_key="Record",
         )
 
         create_product(
-            name="record player1",
+            name="Audio-Technica AT-LP60X Turntable",
             seller_obj=seller,
             category_obj=record_player,
-            description="Autofilled example record player product",
-            price=Decimal("30.99"),
-            stock=8,
+            description="Fully automatic belt-drive turntable with built-in phono preamp. Perfect for beginners and vinyl enthusiasts alike.",
+            price=Decimal("149.99"),
+            stock=7,
             image_key="Record Player",
         )
 
         create_product(
-            name="amp1",
+            name="Yamaha Stereo Amplifier A-S301",
             seller_obj=seller1,
             category_obj=amp,
-            description="Autofilled example amp product",
-            price=Decimal("35.99"),
-            stock=14,
+            description="Powerful integrated amplifier delivering clear, dynamic audio. Features optical input and subwoofer output.",
+            price=Decimal("349.99"),
+            stock=5,
             image_key="Amp",
         )
 
         create_product(
-            name="tuner1",
+            name="Sony AM/FM Digital Tuner",
             seller_obj=seller1,
             category_obj=tuner,
-            description="Autofilled example tuner product",
-            price=Decimal("15.99"),
-            stock=1,
+            description="Compact digital tuner with preset station memory and excellent signal clarity for home audio systems.",
+            price=Decimal("89.99"),
+            stock=6,
             image_key="Tuner",
         )
 
         create_product(
-            name="headphone1",
+            name="Sony WH-1000XM5 Wireless Headphones",
             seller_obj=seller,
             category_obj=headphone,
-            description="Autofilled example headphone product",
-            price=Decimal("60.00"),
-            stock=5,
+            description="Industry-leading noise cancellation with premium sound quality and up to 30 hours of battery life.",
+            price=Decimal("399.99"),
+            stock=9,
             image_key="Headphone",
         )
 
-        create_product(
-            name="cd1",
-            seller_obj=seller1,
-            category_obj=cd,
-            description="Autofilled example cd product",
-            price=Decimal("6.99"),
-            stock=11,
-            image_key="CD",
-        )
-
-        create_product(
-            name="cleaner kit1",
-            seller_obj=seller,
-            category_obj=cleaning_kit,
-            description="Autofilled example cleaning kit product",
-            price=Decimal("14.99"),
-            stock=9,
-            image_key="Cleaning Kit",
-        )
 
         address = Address.objects.create(
             user=buyer,

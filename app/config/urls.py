@@ -15,10 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
+from django.views.static import serve
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 
 urlpatterns = [
@@ -28,19 +29,15 @@ urlpatterns = [
     path("api/auth/", include("accounts.urls")),
     path("api/cart/", include(("cart.urls", "cart"), namespace="cart")),
 
-
-
-    #This is the JWT endpoints-Jack put in
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
+
+    re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
 ]
-#this is to cover error pages from users, just so users dont see ugly error pages
+
 handler404 = "config.views.custom_404"
 handler403 = "config.views.custom_403"
 handler500 = "config.views.custom_500"
-
-
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     
 

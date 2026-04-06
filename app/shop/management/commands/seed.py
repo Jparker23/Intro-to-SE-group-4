@@ -107,7 +107,7 @@ class Command(BaseCommand):
                 description=description,
                 price=price,
                 stock=stock,
-                
+                **product_defaults
             )
 
             image_path = seed_photo_dir / image_map[image_key]

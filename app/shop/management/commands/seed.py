@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from decimal import Decimal
-from shop.models import Product, Category, Order, OrderItem, Payment, Address, Payout
+from pathlib import Path
+from shop.models import Product, ReturnRequest, Category, Order, OrderItem, Payment, Address, Payout
 from django.utils import timezone
 from accounts.models import User
 #file to seed the database with premade values
@@ -10,13 +11,29 @@ class Command(BaseCommand):
     
     def handle(self, *args, **options):
        #clear only safe data
+        ReturnRequest.objects.all().delete()
+        Payout.objects.all().delete()
         Payment.objects.all().delete()
         OrderItem.objects.all().delete()
         Order.objects.all().delete()
         Address.objects.all().delete()
         Product.objects.all().delete()
         Category.objects.all().delete()
-        Payout.objects.all().delete()
+
+        # tracked seed image folder in repo
+        seed_photo_dir = Path(__file__).resolve().parents[3] / "seed_photos"
+
+        image_map = {
+            "Record": "record1.jpg",
+            "Record Player": "recordplayer.jpg",
+            "Amp": "amp.jpg",
+            "Tuner": "tuner.jpg",
+            "Headphone": "headphones.jpg",
+            "CD": "testcd.jpg",
+            "Cleaning Kit": "cleaning-kit-product.jpg",
+        }
+
+
         
         # Categories
         record, _ = Category.objects.get_or_create(name="Record")
@@ -72,112 +89,96 @@ class Command(BaseCommand):
         seller1.set_password("password123")
         seller1.save()
         
-        image_map = {
-        "Record": "product_photos/record1.jpg",
-        "Record Player": "product_photos/recordplayer.jpg",
-        "Amp": "product_photos/amp.jpg",
-        "Tuner": "product_photos/tuner.jpg",
-        "Headphone": "product_photos/headphones.jpg",
-        "CD": "product_photos/testcd.jpg",
-        "Cleaning Kit": "product_photos/cleaning-kit-product.jpg",
-        }
-
-
-        # Products
-        product_defaults = dict(
-            is_active=True,
-            is_approved=True,
-            approval_status="Approved",
-            orbit_int=True,
-            redirect_int=None,
-            deleted_at=None,
-        )
-
-        record1, _ = Product.objects.get_or_create(
-            name="record1", seller=seller,
-            defaults={
-                "category": record,
-                "description": "Autofilled example record product",
-                "price": 10.99,
-                "stock": 5,
-                "photo": image_map["Record"],   
+        def create_product(name, seller_obj, category_obj, description, price, stock, image_key):
+            product = Product.objects.create(
+                name=name,
+                seller=seller_obj,
+                category=category_obj,
+                description=description,
+                price=price,
+                stock=stock,
                 **product_defaults,
-            }
+            )
+
+            image_path = seed_photo_dir / image_map[image_key]
+            if image_path.exists():
+                with open(image_path, "rb") as img_file:
+                    product.photo.save(image_path.name, File(img_file), save=True)
+            else:
+                self.stdout.write(self.style.WARNING(f"Missing image: {image_path}"))
+
+            return product
+
+        record1 = create_product(
+            name="record1",
+            seller_obj=seller,
+            category_obj=record,
+            description="Autofilled example record product",
+            price=Decimal("10.99"),
+            stock=5,
+            image_key="Record",
         )
 
-        Product.objects.get_or_create(
-            name="record player1", seller=seller,
-            defaults={
-                "category": record_player,
-                "description": "Autofilled example record player product",
-                "price": 30.99,
-                "stock": 8,
-                "photo": image_map["Record Player"],
-                **product_defaults,
-            }
+        create_product(
+            name="record player1",
+            seller_obj=seller,
+            category_obj=record_player,
+            description="Autofilled example record player product",
+            price=Decimal("30.99"),
+            stock=8,
+            image_key="Record Player",
         )
 
-        Product.objects.get_or_create(
-            name="amp1", seller=seller1,
-            defaults={
-                "category": amp,
-                "description": "Autofilled example amp product",
-                "price": 35.99,
-                "stock": 14,
-                "photo": image_map["Amp"],
-                **product_defaults,
-            }
+        create_product(
+            name="amp1",
+            seller_obj=seller1,
+            category_obj=amp,
+            description="Autofilled example amp product",
+            price=Decimal("35.99"),
+            stock=14,
+            image_key="Amp",
         )
 
-        Product.objects.get_or_create(
-            name="tuner1", seller=seller1,
-            defaults={
-                "category": tuner,
-                "description": "Autofilled example tuner product",
-                "price": 15.99,
-                "stock": 1,
-                "photo": image_map["Tuner"],
-                **product_defaults,
-            }
+        create_product(
+            name="tuner1",
+            seller_obj=seller1,
+            category_obj=tuner,
+            description="Autofilled example tuner product",
+            price=Decimal("15.99"),
+            stock=1,
+            image_key="Tuner",
         )
 
-        Product.objects.get_or_create(
-            name="headphone1", seller=seller,
-            defaults={
-                "category": headphone,
-                "description": "Autofilled example headphone product",
-                "price": 60.00,
-                "stock": 5,
-                "photo": image_map["Headphone"],
-                **product_defaults,
-            }
+        create_product(
+            name="headphone1",
+            seller_obj=seller,
+            category_obj=headphone,
+            description="Autofilled example headphone product",
+            price=Decimal("60.00"),
+            stock=5,
+            image_key="Headphone",
         )
 
-        Product.objects.get_or_create(
-            name="cd1", seller=seller1,
-            defaults={
-                "category": cd,
-                "description": "Autofilled example cd product",
-                "price": 6.99,
-                "stock": 11,
-                "photo": image_map["CD"],
-                **product_defaults,
-            }
+        create_product(
+            name="cd1",
+            seller_obj=seller1,
+            category_obj=cd,
+            description="Autofilled example cd product",
+            price=Decimal("6.99"),
+            stock=11,
+            image_key="CD",
         )
 
-        Product.objects.get_or_create(
-            name="cleaner kit1", seller=seller,
-            defaults={
-                "category": cleaning_kit,
-                "description": "Autofilled example cleaning kit product",
-                "price": 14.99,
-                "stock": 9,
-                "photo": image_map["Cleaning Kit"],
-                **product_defaults,
-            }
+        create_product(
+            name="cleaner kit1",
+            seller_obj=seller,
+            category_obj=cleaning_kit,
+            description="Autofilled example cleaning kit product",
+            price=Decimal("14.99"),
+            stock=9,
+            image_key="Cleaning Kit",
         )
-        
-        # Create address
+
         address = Address.objects.create(
             user=buyer,
             full_name="Test Buyer",
@@ -188,7 +189,6 @@ class Command(BaseCommand):
             country="USA",
         )
 
-        # Create order
         order = Order.objects.create(
             buyer=buyer,
             shipping_address=address,
@@ -200,23 +200,15 @@ class Command(BaseCommand):
             status="Completed",
         )
 
-        # Create order item
-        product = Product.objects.get(name="record1", seller=seller)
-        if product is None:
-            return
-
-        seller = product.seller
-        price_at_purchase = product.price
-
         OrderItem.objects.create(
             order=order,
-            product=product,
-            seller=product.seller,
+            product=record1,
+            seller=record1.seller,
             quantity=1,
-            price_at_purchase=product.price,
-            status="Completed",)
+            price_at_purchase=record1.price,
+            status="Completed",
+        )
 
-        # Create payment
         Payment.objects.create(
             user=buyer,
             order=order,
@@ -230,15 +222,14 @@ class Command(BaseCommand):
             exp_month="12",
             exp_year="2028",
         )
-        
-        # Create Payout
-        order_item = OrderItem.objects.get(order=order, product=product)
+
+        order_item = OrderItem.objects.get(order=order, product=record1)
         Payout.objects.create(
-            seller=product.seller,
-            order_item = order_item,
-            amount = price_at_purchase * 1,
-            status = "Paid",
-            paid_at = timezone.now(),
+            seller=record1.seller,
+            order_item=order_item,
+            amount=record1.price,
+            status="Paid",
+            paid_at=timezone.now(),
         )
-        
-        self.stdout.write(self.style.SUCCESS('Successfully seeded database.'))
+
+        self.stdout.write(self.style.SUCCESS("Successfully seeded database."))

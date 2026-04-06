@@ -40,7 +40,7 @@ handler404 = "config.views.custom_404"
 handler403 = "config.views.custom_403"
 handler500 = "config.views.custom_500"
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     
 

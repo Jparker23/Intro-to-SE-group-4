@@ -12,20 +12,23 @@
     <div class="topRight">
       {% if request.user.is_authenticated and request.user.role == "buyer" %}
       <a class="LoginContainer" href="{% url 'account' %}">
-        <i class="fa fa-user"></i><span>Account</span>
+        <i class="fa fa-user"></i>
+        <span>Account</span>
       </a>
-      <a href="{% url 'cart:cart_details' %}" class="iconBtn">
+      <a href="{% url 'cart:cart_details' %}" class="iconBtn" aria-label="Cart">
         <i class="fa fa-shopping-cart"></i>
       </a>
       {% elif request.user.is_authenticated %}
       <a class="LoginContainer" href="{% url 'account' %}">
-        <i class="fa fa-user"></i><span>Account</span>
+        <i class="fa fa-user"></i>
+        <span>Account</span>
       </a>
       {% else %}
       <a class="LoginContainer" href="{% url 'login' %}">
-        <i class="fa fa-user"></i><span>Login</span>
+        <i class="fa fa-user"></i>
+        <span>Login</span>
       </a>
-      <a href="#" class="iconBtn" onclick="cartLoginAlert(); return false;">
+      <a href="#" class="iconBtn" onclick="cartLoginAlert(); return false;" aria-label="Cart">
         <i class="fa fa-shopping-cart"></i>
       </a>
       {% endif %}
@@ -34,21 +37,23 @@
 </header>
 
 <div class="container my-3">
-  <div class="d-flex justify-content-center">
-    <form method="get" action="{% url 'catalog' %}" style="max-width: 700px; width:100%;">
-      <div class="input-group search">
-        <input
-        class="form-control text-center"
-        type="text"
-        name="query"
-        value="{{ request.GET.query }}"
-        placeholder="Search"
-        >
-        <button class="btn searchIcon" type="submit">
-          <i class="fa fa-search"></i>
-        </button>
-      </div>
-    </form>
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <form method="get" action="{% url 'catalog' %}">
+        <div class="input-group search">
+          <input
+          class="form-control text-center"
+          type="text"
+          name="query"
+          value="{{ request.GET.query }}"
+          placeholder="Search"
+          >
+          <button class="btn searchIcon" type="submit" aria-label="Search">
+            <i class="fa fa-search"></i>
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 
@@ -67,7 +72,7 @@
 <div class="container pb-4">
   <div class="row g-4">
     <div class="col-12 col-lg-3">
-      <div class="bg-white rounded shadow-sm p-3">
+      <div class="bg-white rounded shadow-sm p-3 h-100">
         <h5 class="mb-3">Filters</h5>
         
         <form method="get" action="{% url 'catalog' %}">
@@ -150,17 +155,17 @@
       </div>
     </div>
     
-    <div class="col-lg-9">
-      <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="col-12 col-lg-9">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
         <h3 class="m-0 prodPage">Catalog</h3>
         <small class="text-muted">{{ products|length }} items found</small>
       </div>
       
       <div class="row g-4">
         {% for product in products %}
-        <div class="col-md-6 col-xl-4">
+        <div class="col-12 col-sm-6 col-xl-4">
           <div class="card productCard h-100 shadow-sm">
-            <a href="{% url 'prod_details' product.pk %}" style="text-decoration: none; color: inherit;">
+            <a href="{% url 'prod_details' product.pk %}" class="text-decoration-none text-dark">
               {% if product.photo %}
               <img
               src="{{ product.photo.url }}"
@@ -183,7 +188,7 @@
                 <p class="text-muted mb-2">{{ product.seller.username }}</p>
                 
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <strong>${{ product.price }}</strong>
+                  <strong>${{ product.price|floatformat:2 }}</strong>
                   {% if product.stock == 0 %}
                   <small class="text-danger">Out of stock</small>
                   {% else %}

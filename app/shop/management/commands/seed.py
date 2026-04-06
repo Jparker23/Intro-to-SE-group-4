@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from decimal import Decimal
 from pathlib import Path
+from django.core.files import File
 from shop.models import Product, ReturnRequest, Category, Order, OrderItem, Payment, Address, Payout
 from django.utils import timezone
 from accounts.models import User
@@ -21,7 +22,7 @@ class Command(BaseCommand):
         Category.objects.all().delete()
 
         # tracked seed image folder in repo
-        seed_photo_dir = Path(__file__).resolve().parents[3] / "seed_photos"
+        seed_photo_dir = Path(__file__).resolve().parents[2] / "seed_photos"
 
         image_map = {
             "Record": "record1.jpg",
@@ -30,7 +31,7 @@ class Command(BaseCommand):
             "Tuner": "tuner.jpg",
             "Headphone": "headphones.jpg",
             "CD": "testcd.jpg",
-            "Cleaning Kit": "cleaning-kit-product.jpg",
+            "Cleaning Kit": "cleaning-kit-product-photo.jpg",
         }
 
 

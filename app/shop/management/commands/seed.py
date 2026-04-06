@@ -73,13 +73,13 @@ class Command(BaseCommand):
         seller1.save()
         
         image_map = {
-            "Record": "product_photos/record1.jpg",
-            "Record Player": "product_photos/recordplayer.jpg",
-            "Amp": "product_photos/amp.jpg",
-            "Tuner": "product_photos/tuner.jpg",
-            "Headphone": "product_photos/headphones.jpg",
-            "CD": "product_photos/testcd.jpg",
-            "Cleaning Kit": "product_photos/cleaning-kit-produc....jpg",  # replace with exact filename
+        "Record": "product_photos/record1.jpg",
+        "Record Player": "product_photos/recordplayer.jpg",
+        "Amp": "product_photos/amp.jpg",
+        "Tuner": "product_photos/tuner.jpg",
+        "Headphone": "product_photos/headphones.jpg",
+        "CD": "product_photos/testcd.jpg",
+        "Cleaning Kit": "product_photos/cleaning-kit-product.jpg",
         }
 
 
@@ -101,7 +101,6 @@ class Command(BaseCommand):
                 "price": 10.99,
                 "stock": 5,
                 "photo": image_map["Record"],   
-                **product_defaults,
                 **product_defaults,
             }
         )

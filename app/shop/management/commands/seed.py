@@ -72,6 +72,17 @@ class Command(BaseCommand):
         seller1.set_password("password123")
         seller1.save()
         
+        image_map = {
+            "Record": "product_photos/record1.jpg",
+            "Record Player": "product_photos/recordplayer.jpg",
+            "Amp": "product_photos/amp.jpg",
+            "Tuner": "product_photos/tuner.jpg",
+            "Headphone": "product_photos/headphones.jpg",
+            "CD": "product_photos/testcd.jpg",
+            "Cleaning Kit": "product_photos/cleaning-kit-produc....jpg",  # replace with exact filename
+        }
+
+
         # Products
         product_defaults = dict(
             is_active=True,
@@ -89,6 +100,8 @@ class Command(BaseCommand):
                 "description": "Autofilled example record product",
                 "price": 10.99,
                 "stock": 5,
+                "photo": image_map["Record"],   
+                **product_defaults,
                 **product_defaults,
             }
         )
@@ -100,6 +113,7 @@ class Command(BaseCommand):
                 "description": "Autofilled example record player product",
                 "price": 30.99,
                 "stock": 8,
+                "photo": image_map["Record Player"],
                 **product_defaults,
             }
         )
@@ -111,6 +125,7 @@ class Command(BaseCommand):
                 "description": "Autofilled example amp product",
                 "price": 35.99,
                 "stock": 14,
+                "photo": image_map["Amp"],
                 **product_defaults,
             }
         )
@@ -122,6 +137,7 @@ class Command(BaseCommand):
                 "description": "Autofilled example tuner product",
                 "price": 15.99,
                 "stock": 1,
+                "photo": image_map["Tuner"],
                 **product_defaults,
             }
         )
@@ -133,6 +149,7 @@ class Command(BaseCommand):
                 "description": "Autofilled example headphone product",
                 "price": 60.00,
                 "stock": 5,
+                "photo": image_map["Headphone"],
                 **product_defaults,
             }
         )
@@ -144,6 +161,7 @@ class Command(BaseCommand):
                 "description": "Autofilled example cd product",
                 "price": 6.99,
                 "stock": 11,
+                "photo": image_map["CD"],
                 **product_defaults,
             }
         )
@@ -155,6 +173,7 @@ class Command(BaseCommand):
                 "description": "Autofilled example cleaning kit product",
                 "price": 14.99,
                 "stock": 9,
+                "photo": image_map["Cleaning Kit"],
                 **product_defaults,
             }
         )

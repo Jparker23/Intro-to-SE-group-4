@@ -1,9 +1,9 @@
 from django.shortcuts import render,redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import ProtectedError, Sum
+from django.db.models import ProtectedError, Sum, Avg
 from django.contrib.auth import get_user_model
 from decimal import Decimal
-from .models import Product, Payout, Address, Order, Category, OrderItem, Payment, Cart, CartItem, Fee, ReturnRequest, AdminLog
+from .models import Product, Review, Payout, Address, Order, Category, OrderItem, Payment, Cart, CartItem, Fee, ReturnRequest, AdminLog
 from .forms import ProductForm
 from cart.views import Cart, CartItem
 from accounts.models import User
@@ -13,6 +13,7 @@ from django.contrib import messages
 import resend
 from django.conf import settings
 from django.views.decorators.cache import never_cache
+
 
 
 TAX_RATE_PERCENT = Decimal("10.00")
@@ -323,7 +324,39 @@ def prod_details(request, pk):
     if product.redirect_int is not None:
         return redirect("prod_details", pk=product.redirect_int.pk)
 
-    return render(request, "generic/product.html", {"product": product})
+    if request.user.is_authenticated and request.user.role == "admin":
+        reviews = Review.objects.filter(product=product).select_related("buyer")
+    else:
+        reviews = Review.objects.filter(
+            product=product,
+            is_hidden=False
+        ).select_related("buyer")
+
+    average_rating = Review.objects.filter(
+        product=product,
+        is_hidden=False
+    ).aggregate(avg=Avg("rating"))["avg"]
+
+    can_review = False
+    user_review = None
+
+    if request.user.is_authenticated and request.user.role == "buyer":
+        has_purchased = OrderItem.objects.filter(
+            order__buyer=request.user,
+            product=product,
+        ).exists()
+
+        can_review = has_purchased
+        user_review = Review.objects.filter(
+            product=product,
+            buyer=request.user
+        ).first()
+
+    context = {"product": product,
+"reviews": reviews,
+"average_rating": average_rating, "can_review": can_review,"user_review": user_review,}
+
+    return render(request, "generic/product.html", context)
 
 @never_cache
 @login_required
@@ -714,3 +747,75 @@ def deny_user(request, pk):
 
     return redirect("adminModeration")
 
+@login_required
+def submit_review(request, product_id):
+    product = get_object_or_404(Product, pk=product_id, is_active=True)
+
+    if request.user.role != "buyer":
+        messages.error(request, "Only buyers can leave reviews.")
+        return redirect("prod_details", pk=product.pk)
+
+    has_purchased = OrderItem.objects.filter(order__buyer=request.user, product=product, ).exists()
+
+    if not has_purchased:
+        messages.error(request, "You can only review products you have purchased.")
+        return redirect("prod_details", pk=product.pk)
+
+    existing_review = Review.objects.filter(product=product, buyer=request.user).first()
+
+    if request.method == "POST":
+        rating = request.POST.get("rating")
+        comment = (request.POST.get("comment") or "").strip()
+
+        try:
+            rating = int(rating)
+        except (TypeError, ValueError):
+            messages.error(request, "Please select a valid rating.")
+            return redirect("prod_details", pk=product.pk)
+
+        if rating < 1 or rating > 5:
+            messages.error(request, "Rating must be between 1 and 5.")
+            return redirect("prod_details", pk=product.pk)
+
+        if existing_review:
+            existing_review.rating = rating
+            existing_review.comment = comment
+            existing_review.save()
+
+            if existing_review.is_hidden:
+                messages.success(request, "Your review was updated and is still hidden pending admin visibility.")
+            else:
+                messages.success(request, "Your review was updated.")
+        else:
+            Review.objects.create(product=product, buyer=request.user, rating=rating, comment=comment,)
+            messages.success(request, "Your review was submitted.")
+
+    return redirect("prod_details", pk=product.pk)
+
+#this is so admins can remove any wrongful reviews/comments made by buyers!
+@login_required
+def hide_review(request, review_id):
+    review = get_object_or_404(Review, pk=review_id)
+
+    if request.user.role != "admin":
+        messages.error(request, "You are not authorized to do that.")
+        return redirect("prod_details", pk=review.product.id)
+
+    review.is_hidden = True
+    review.save()
+    messages.success(request, "Review hidden successfully.")
+    return redirect("prod_details", pk=review.product.id)
+
+
+@login_required
+def unhide_review(request, review_id):
+    review = get_object_or_404(Review, pk=review_id)
+
+    if request.user.role != "admin":
+        messages.error(request, "You are not authorized to do that.")
+        return redirect("prod_details", pk=review.product.pk)
+
+    review.is_hidden = False
+    review.save()
+    messages.success(request, "Review is visible again.")
+    return redirect("prod_details", pk=review.product.pk)

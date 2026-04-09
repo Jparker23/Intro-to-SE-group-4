@@ -3,6 +3,8 @@ from django.conf import settings
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Category(models.Model):
@@ -168,3 +170,21 @@ class Fee(models.Model):
     def clean(self):
         if not self.order and not self.order_item:
             raise ValidationError("Fee must be attached to an order or an order item.")
+
+
+
+class Review(models.Model):
+    product = models.ForeignKey("Product", on_delete=models.CASCADE, related_name="reviews")
+    buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reviews")
+    rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_hidden = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ("product", "buyer")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.product.name} - {self.buyer.username} ({self.rating}/5)"

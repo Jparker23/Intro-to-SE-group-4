@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.db import transaction
 from accounts.models import User
-from .models import (Review, Product, Category, Cart, CartItem,Address, Order, OrderItem, Payment, ReturnRequest,AdminLog, Fee)
+from .models import (Review, Product, Notification, Category, Cart, CartItem,Address, Order, OrderItem, Payment, ReturnRequest,AdminLog, Fee)
 
 
 # --- Custom Actions ---
@@ -205,9 +205,17 @@ admin.site.register(AdminLog, AdminLogAdmin)
 admin.site.register(Fee, FeeAdmin)
 
 
-
+# --- lets admins see reviews on prducts, so then they can manage reviews ---
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ("product", "buyer", "rating", "is_hidden", "created_at")
     list_filter = ("rating", "is_hidden", "created_at")
     search_fields = ("product__name", "buyer__username", "comment")
+
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("seller", "message", "is_read", "created_at")
+    list_filter = ("is_read", "created_at")
+    search_fields = ("seller__username", "message")

@@ -1,9 +1,10 @@
 from django.shortcuts import render,redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
 from django.db.models import ProtectedError, Sum, Avg
 from django.contrib.auth import get_user_model
 from decimal import Decimal
-from .models import Product, Review, Payout, Address, Order, Category, OrderItem, Payment, Cart, CartItem, Fee, ReturnRequest, AdminLog
+from .models import Product, Review, Payout, Address, Notification, Order, Category, OrderItem, Payment, Cart, CartItem, Fee, ReturnRequest, AdminLog
 from .forms import ProductForm
 from cart.views import Cart, CartItem
 from accounts.models import User
@@ -12,7 +13,9 @@ from django.utils import timezone
 from django.contrib import messages
 import resend
 from django.conf import settings
-from django.views.decorators.cache import never_cache
+from django.http import HttpResponse
+from django.utils.feedgenerator import Rss201rev2Feed
+
 
 
 
@@ -327,30 +330,18 @@ def prod_details(request, pk):
     if request.user.is_authenticated and request.user.role == "admin":
         reviews = Review.objects.filter(product=product).select_related("buyer")
     else:
-        reviews = Review.objects.filter(
-            product=product,
-            is_hidden=False
-        ).select_related("buyer")
+        reviews = Review.objects.filter(product=product, is_hidden=False).select_related("buyer")
 
-    average_rating = Review.objects.filter(
-        product=product,
-        is_hidden=False
-    ).aggregate(avg=Avg("rating"))["avg"]
+    average_rating = Review.objects.filter(product=product, is_hidden=False).aggregate(avg=Avg("rating"))["avg"]
 
     can_review = False
     user_review = None
 
     if request.user.is_authenticated and request.user.role == "buyer":
-        has_purchased = OrderItem.objects.filter(
-            order__buyer=request.user,
-            product=product,
-        ).exists()
+        has_purchased = OrderItem.objects.filter(order__buyer=request.user, product=product,).exists()
 
         can_review = has_purchased
-        user_review = Review.objects.filter(
-            product=product,
-            buyer=request.user
-        ).first()
+        user_review = Review.objects.filter(product=product, buyer=request.user).first()
 
     context = {"product": product,
 "reviews": reviews,
@@ -492,10 +483,12 @@ def checkout(request):
 
                 order_item=OrderItem.objects.create(order=order,product=item.product,seller=item.product.seller,quantity=item.quantity,price_at_purchase=item.product.price,status="Processing",)
                 Payout.objects.create(seller=item.product.seller, order_item=order_item, amount=order_item.price_at_purchase * order_item.quantity, status="Paid", paid_at=timezone.now(),)
-
+                
 
                 item.product.stock -= item.quantity
                 item.product.save(update_fields=["stock"])
+                Notification.objects.create(seller=order_item.product.seller, order=order, order_item=order_item, message=f"{order_item.product.name} was ordered.",)
+
 
             Fee.objects.create(order=order,fee_type="Shipping",amount=fees,)
 
@@ -819,3 +812,52 @@ def unhide_review(request, review_id):
     review.save()
     messages.success(request, "Review is visible again.")
     return redirect("prod_details", pk=review.product.pk)
+
+
+@login_required
+def seller_notifications_rss(request):
+    if request.user.role != "seller":
+        return redirect("home")
+
+    notifications = Notification.objects.filter(seller=request.user).select_related("order", "order_item", "order_item__product", "order__shipping_address", ).order_by("-created_at")[:50]
+
+    feed = Rss201rev2Feed(title=f"{request.user.username} Warehouse Order Feed", link="/seller/notifications/rss/", description="Sold-item RSS feed for seller warehouse software", language="en", )
+
+    for notification in notifications:
+        order = notification.order
+        order_item = notification.order_item
+        product = order_item.product
+
+        address = getattr(order, "shipping_address", None)
+
+        if address:
+            ship_to_address = ( f"{address.full_name}, " f"{address.street}, " f"{address.city}, " f"{address.state} {address.zipcode}, " f"{address.country}")
+        else:
+            ship_to_address = "No shipping address found"
+
+        description = ( f"Product Name: {product.name}\n" f"Quantity: {order_item.quantity}\n" f"Ship-To Address: {ship_to_address}\n" f"Order Date/Time: {timezone.localtime(order.created_at)}\n" )
+
+        feed.add_item(title=f"New Order - {product.name}", link=f"/api/products/{product.pk}/", description=description, pubdate=order.created_at,unique_id=f"seller-{request.user.pk}-notification-{notification.pk}",)
+
+    rss_output = feed.writeString("utf-8")
+    return HttpResponse(rss_output, content_type="application/rss+xml")
+
+@login_required
+def seller_notifications(request):
+    if request.user.role != "seller":
+        return redirect("home")
+
+    notifications = Notification.objects.filter(seller=request.user).select_related("order", "order_item", "order_item__product").order_by("-created_at")
+
+    return render(request, "generic/seller-notifications.html", {"notifications": notifications})
+
+@login_required
+def mark_notification_read(request, notification_id):
+    if request.user.role != "seller":
+        return redirect("home")
+
+    notification = get_object_or_404( Notification, pk=notification_id, seller=request.user)
+    notification.is_read = True
+    notification.save()
+
+    return redirect("seller_notifications")

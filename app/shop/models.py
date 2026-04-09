@@ -188,3 +188,17 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.buyer.username} ({self.rating}/5)"
+    
+
+#RSS feed
+class Notification(models.Model):
+    seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications")
+    order = models.ForeignKey("Order", on_delete=models.CASCADE, related_name="notifications")
+    order_item = models.ForeignKey("OrderItem", on_delete=models.CASCADE, related_name="notifications")
+    message = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+    

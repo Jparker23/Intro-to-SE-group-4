@@ -68,8 +68,8 @@ class Command(BaseCommand):
 
         buyers = []
         buyer_data = [
-            ("buyer", "buyer.buying@example.com", "buyer buying"),
-            ("buyer1", "buyer.1@example.com", "buyer 1"),
+            ("buyer", "buyer.buying@example.com", "Buyer Buying"),
+            ("buyer1", "buyer.1@example.com", "Buyer One"),
         ]
 
         buyer_name_lookup = {}
@@ -133,7 +133,7 @@ class Command(BaseCommand):
             "Headphone": "product_photos/headphones.jpg",
             "CD": "product_photos/testcd.jpg",
             "Cleaning Kit": "product_photos/cleaning-kit-product-photo.jpg",
-         }
+        }
 
         product_data = [
             ("Fleetwood Mac – Rumours", "Record", Decimal("29.99")),
@@ -174,8 +174,52 @@ class Command(BaseCommand):
             ("Portable Record Case", "Record", Decimal("39.99")),
         ]
 
-        descriptions = [
-            "Great condition and perfect for everyday listening.",
+        product_descriptions = {
+            "Fleetwood Mac – Rumours": "Fleetwood Mac’s Rumours is a classic soft rock record with warm vocals, polished production, and a smooth mix of heartbreak and melody. A great pick for listeners who want something timeless and easy to keep on repeat.",
+            "Abbey Road": "Abbey Road by The Beatles blends melodic rock, layered harmonies, and some of the band’s most recognizable songwriting. This record has a clean, balanced sound that fits both casual listening and a serious vinyl setup.",
+            "Dark Side of the Moon": "Pink Floyd’s Dark Side of the Moon has a deep, atmospheric sound with rich guitars, synth textures, and seamless transitions from track to track. A strong choice for anyone building a serious record collection.",
+            "Hotel California": "Hotel California by the Eagles delivers polished classic rock with crisp guitar work, laid-back vocals, and a smooth West Coast sound. It is an easy album to throw on when you want something familiar and well produced.",
+            "Thriller": "Michael Jackson’s Thriller mixes pop, funk, and R&B with sharp production and huge energy. This is one of those records that sounds lively on almost any setup and works well for both collectors and casual buyers.",
+            "Back in Black": "AC/DC’s Back in Black is a hard rock staple with punchy riffs, driving drums, and a raw, energetic sound. A great record for buyers who want something louder, heavier, and instantly recognizable.",
+            "Led Zeppelin IV": "Led Zeppelin IV brings together hard rock, folk influence, and a powerful analog sound. The record has strong dynamics and a full-bodied feel that makes it a favorite for classic rock fans.",
+            "Born in the U.S.A.": "Bruce Springsteen’s Born in the U.S.A. has an anthemic rock sound with big drums, bright synths, and strong vocal presence. A solid addition for buyers who like heartland rock with a lot of personality.",
+
+            "Audio-Technica AT-LP60X": "A dependable entry-level turntable with fully automatic operation and a clean, user-friendly design. Great for buyers who want an easy starter record player without a complicated setup.",
+            "Victrola Vintage 3-Speed": "A compact 3-speed record player with a vintage-inspired look and simple controls. Best for casual listening, smaller spaces, or buyers who want an affordable all-in-one option.",
+            "Sony PS-LX310BT": "A sleek belt-drive turntable with Bluetooth support and a modern, minimal design. Good for buyers who want the flexibility of wireless listening while still enjoying vinyl playback.",
+            "Fluance RT81": "A more premium record player with a solid wood finish, balanced sound, and a smoother listening experience. A nice fit for buyers looking to step up from basic starter models.",
+            "Deluxe Turntable Mat": "A simple upgrade piece that helps protect records and gives a turntable setup a more finished look. Good for users who want to improve daily use without spending much.",
+
+            "Sony Stereo Receiver": "A reliable stereo receiver with clean output and enough power for a home listening setup. A solid match for buyers building a straightforward audio system.",
+            "Hi-Fi Receiver": "A good midrange receiver designed for balanced sound and everyday listening. Works well for music lovers who want dependable performance without too much complexity.",
+            "Speaker Cable Pack": "Basic speaker cable pack for connecting home audio gear quickly and easily. A practical add-on for buyers putting together a receiver and speaker setup.",
+            "Pioneer Home Audio Receiver": "A versatile home audio receiver with strong brand recognition and a clean sound profile. Great for buyers who want a dependable centerpiece for their listening space.",
+            "Compact Stereo Amplifier": "A smaller amplifier that fits neatly into tighter setups while still delivering clear, consistent sound. Good for apartments, desks, or smaller shelves.",
+
+            "Yamaha Natural Sound Tuner": "A tuner designed for clean FM and AM playback with Yamaha’s classic understated style. A nice add-on for buyers who want traditional radio in their audio stack.",
+            "Digital FM/AM Tuner": "Straightforward digital tuner with simple controls and dependable station access. Best for buyers who want a practical and affordable radio component.",
+            "Classic Stereo Tuner": "A traditional stereo tuner with a familiar look and a simple listening experience. A good pick for vintage audio fans and buyers rounding out a stack setup.",
+
+            "Sony WH-1000XM4": "Popular wireless headphones known for comfort, strong noise canceling, and a smooth overall sound. A strong choice for everyday listening, travel, and longer sessions.",
+            "Bose QuietComfort": "Comfort-focused headphones with soft ear cushions, clear audio, and reliable noise reduction. Great for buyers who want something easy to wear for extended use.",
+            "Studio Monitor Headphones": "Closed-back monitor headphones with a straightforward sound profile that works well for detail listening and casual home use. A solid budget-friendly option.",
+            "Audio-Technica M50x": "Well-known monitor headphones with clear mids, crisp highs, and a more detailed sound than typical consumer models. Good for buyers who want a more studio-style listening experience.",
+            "Wireless Bass Headphones": "Wireless headphones tuned with a stronger low end and an easy everyday fit. A nice option for buyers who prefer a fuller, more energetic sound.",
+
+            "Greatest Hits Collection": "A dependable CD pick for buyers who want familiar tracks in one place without having to track down a full catalog. Great for casual listening and quick gifting.",
+            "Classic Rock Essentials": "A CD collection built around recognizable classic rock favorites with broad appeal. A simple pickup for buyers who want an easy playlist-style option.",
+            "Jazz Favorites Volume 1": "A relaxed jazz compilation with a smooth, easygoing feel that works well for background listening or quieter setups. Nice for buyers wanting something more mellow.",
+            "Acoustic Sessions": "A softer acoustic collection with warm vocals and stripped-back arrangements. Great for listeners who prefer a more intimate, laid-back sound.",
+
+            "Vinyl Cleaning Brush": "A simple record cleaning brush for knocking dust off before playback. A practical basic accessory that helps keep records and stylus contact cleaner.",
+            "Turntable Care Set": "A complete little care kit for buyers who want to keep records, stylus, and surfaces in better shape. A smart add-on for anyone using vinyl regularly.",
+            "Stylus Cleaning Gel": "Easy stylus cleaning gel designed to lift dust and buildup with very little effort. Good for regular maintenance and helping playback stay cleaner.",
+            "Record Sleeve Pack": "Protective sleeve pack for storing records more neatly and reducing wear over time. A useful low-cost pickup for collectors trying to keep albums in good condition.",
+            "Anti-Static Record Cloth": "Soft anti-static cloth meant for quick wipe-downs before and after listening. Handy for keeping dust down in everyday use.",
+            "Portable Record Case": "A portable storage case for keeping a smaller vinyl collection protected and easy to carry. A nice fit for casual collectors or buyers who like organized storage.",
+        }
+
+        fallback_descriptions = [
             "A solid pick for beginners and longtime collectors alike.",
             "Reliable sound quality with a clean, classic look.",
             "A popular item with warm sound and easy setup.",
@@ -191,7 +235,7 @@ class Command(BaseCommand):
                 seller=seller,
                 category=categories[category_name],
                 name=name,
-                description=random.choice(descriptions),
+                description=product_descriptions.get(name, random.choice(fallback_descriptions)),
                 price=price,
                 stock=random.randint(3, 25),
                 is_active=True,

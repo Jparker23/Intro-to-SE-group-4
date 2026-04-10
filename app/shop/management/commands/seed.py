@@ -127,13 +127,13 @@ class Command(BaseCommand):
 
         category_image_map = {
             "Record": "product_photos/record1.jpg",
-            "Record Player": "product_photos/recordplayer1.jpg",
-            "Amp": "product_photos/amp1.jpg",
-            "Tuner": "product_photos/tuner1.jpg",
-            "Headphone": "product_photos/headphone1.jpg",
-            "CD": "product_photos/cd1.jpg",
-            "Cleaning Kit": "product_photos/cleaningkit1.jpg",
-        }
+            "Record Player": "product_photos/recordplayer.jpg",
+            "Amp": "product_photos/amp.jpg",
+            "Tuner": "product_photos/tuner.jpg",
+            "Headphone": "product_photos/headphones.jpg",
+            "CD": "product_photos/testcd.jpg",
+            "Cleaning Kit": "product_photos/cleaning-kit-product-photo.jpg",
+         }
 
         product_data = [
             ("Fleetwood Mac – Rumours", "Record", Decimal("29.99")),

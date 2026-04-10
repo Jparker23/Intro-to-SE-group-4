@@ -157,10 +157,10 @@ class Command(BaseCommand):
             reviewers = random.sample(buyers, k=random.randint(2, min(4, len(buyers))))
             for buyer in reviewers:
                 Review.objects.create(
+                    buyer=buyer,
                     product=product,
-                    user=buyer,
-                    rating=random.randint(3, 5),
-                    comment=random.choice(review_comments),
+                    rating=5,
+                    comment="Great product",
                 )
 
         self.stdout.write(self.style.SUCCESS("Creating a few past orders..."))
@@ -177,7 +177,11 @@ class Command(BaseCommand):
             order = Order.objects.create(
                 buyer=buyer,
                 shipping_address=address,
-                total_amount=total,
+                subtotal=subtotal,
+                total=total,
+                tax_rate=Decimal("0.10"),
+                tax=tax,
+                fee=shipping,
                 status="Delivered",
                 created_at=timezone.now(),
             )
@@ -186,12 +190,14 @@ class Command(BaseCommand):
                 OrderItem.objects.create(
                     order=order,
                     product=p,
-                    quantity=1,
-                    price_when_ordered=p.price,
                     seller=p.seller,
+                    status="Delivered",
+                    quantity=1,
+                    price_at_purchase=p.price,
                 )
 
             Payment.objects.create(
+                user=buyer,
                 order=order,
                 payment_method="Card",
                 payment_status="Completed",

@@ -1,18 +1,18 @@
 from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model
-from django.utils import timezone
 from decimal import Decimal
+from pathlib import Path
+from django.core.files import File
+from django.utils import timezone
 import random
 
 from shop.models import Product, Review, Category, Order, OrderItem, Payment, Address
-
-User = get_user_model()
+from accounts.models import User
 
 
 class Command(BaseCommand):
     help = "Seed demo data for Amplify"
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args, **options):
         self.stdout.write(self.style.WARNING("Clearing old demo data..."))
 
         Review.objects.all().delete()
@@ -23,7 +23,7 @@ class Command(BaseCommand):
         Product.objects.all().delete()
         Category.objects.all().delete()
 
-        usernames_to_delete = [
+        User.objects.filter(username__in=[
             "admin1",
             "vinylvault",
             "spinmasters",
@@ -34,17 +34,32 @@ class Command(BaseCommand):
             "soundstack",
             "buyer",
             "buyer1",
-        ]
-        User.objects.filter(username__in=usernames_to_delete).delete()
+        ]).delete()
+
+        seed_photo_dir = Path(__file__).resolve().parents[2] / "seed_photos"
+
+        image_map = {
+            "Record": "record1.jpg",
+            "Record Player": "recordplayer.jpg",
+            "Amp": "amp.jpg",
+            "Tuner": "tuner.jpg",
+            "Headphone": "headphones.jpg",
+            "CD": "testcd.jpg",
+            "Cleaning Kit": "cleaning-kit-product-photo.jpg",
+        }
 
         self.stdout.write(self.style.SUCCESS("Creating users..."))
 
-        User.objects.create_user(
+        admin = User.objects.create_user(
             username="admin1",
             email="admin1@example.com",
             password="wriug-7qo$ab-9mqwoy",
             role="admin",
         )
+        admin.is_active = True
+        if hasattr(admin, "is_approved"):
+            admin.is_approved = True
+        admin.save()
 
         sellers = []
         seller_data = [
@@ -64,6 +79,10 @@ class Command(BaseCommand):
                 password="wriug-7qo$ab-9mqwoy",
                 role="seller",
             )
+            seller.is_active = True
+            if hasattr(seller, "is_approved"):
+                seller.is_approved = True
+            seller.save()
             sellers.append(seller)
 
         buyers = []
@@ -80,12 +99,17 @@ class Command(BaseCommand):
                 password="wriug-7qo$ab-9mqwoy",
                 role="buyer",
             )
+            buyer.is_active = True
+            if hasattr(buyer, "is_approved"):
+                buyer.is_approved = True
+            buyer.save()
             buyers.append(buyer)
             buyer_name_lookup[buyer.username] = full_name
 
         self.stdout.write(self.style.SUCCESS("Creating categories..."))
 
-        category_names = [
+        categories = {}
+        for name in [
             "Record",
             "Record Player",
             "Amp",
@@ -93,11 +117,8 @@ class Command(BaseCommand):
             "Headphone",
             "CD",
             "Cleaning Kit",
-        ]
-
-        categories = {}
-        for name in category_names:
-            categories[name] = Category.objects.create(name=name)
+        ]:
+            categories[name], _ = Category.objects.get_or_create(name=name)
 
         self.stdout.write(self.style.SUCCESS("Creating buyer addresses..."))
 
@@ -125,15 +146,11 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("Creating products..."))
 
-        category_image_map = {
-            "Record": "product_photos/record1.jpg",
-            "Record Player": "product_photos/recordplayer.jpg",
-            "Amp": "product_photos/amp.jpg",
-            "Tuner": "product_photos/tuner.jpg",
-            "Headphone": "product_photos/headphones.jpg",
-            "CD": "product_photos/testcd.jpg",
-            "Cleaning Kit": "product_photos/cleaning-kit-product-photo.jpg",
-        }
+        product_defaults = dict(
+            is_active=True,
+            is_approved=True,
+            approval_status="Approved",
+        )
 
         product_data = [
             ("Fleetwood Mac – Rumours", "Record", Decimal("29.99")),
@@ -183,34 +200,28 @@ class Command(BaseCommand):
             "Back in Black": "AC/DC’s Back in Black is a hard rock staple with punchy riffs, driving drums, and a raw, energetic sound. A great record for buyers who want something louder, heavier, and instantly recognizable.",
             "Led Zeppelin IV": "Led Zeppelin IV brings together hard rock, folk influence, and a powerful analog sound. The record has strong dynamics and a full-bodied feel that makes it a favorite for classic rock fans.",
             "Born in the U.S.A.": "Bruce Springsteen’s Born in the U.S.A. has an anthemic rock sound with big drums, bright synths, and strong vocal presence. A solid addition for buyers who like heartland rock with a lot of personality.",
-
             "Audio-Technica AT-LP60X": "A dependable entry-level turntable with fully automatic operation and a clean, user-friendly design. Great for buyers who want an easy starter record player without a complicated setup.",
             "Victrola Vintage 3-Speed": "A compact 3-speed record player with a vintage-inspired look and simple controls. Best for casual listening, smaller spaces, or buyers who want an affordable all-in-one option.",
             "Sony PS-LX310BT": "A sleek belt-drive turntable with Bluetooth support and a modern, minimal design. Good for buyers who want the flexibility of wireless listening while still enjoying vinyl playback.",
             "Fluance RT81": "A more premium record player with a solid wood finish, balanced sound, and a smoother listening experience. A nice fit for buyers looking to step up from basic starter models.",
             "Deluxe Turntable Mat": "A simple upgrade piece that helps protect records and gives a turntable setup a more finished look. Good for users who want to improve daily use without spending much.",
-
             "Sony Stereo Receiver": "A reliable stereo receiver with clean output and enough power for a home listening setup. A solid match for buyers building a straightforward audio system.",
             "Hi-Fi Receiver": "A good midrange receiver designed for balanced sound and everyday listening. Works well for music lovers who want dependable performance without too much complexity.",
             "Speaker Cable Pack": "Basic speaker cable pack for connecting home audio gear quickly and easily. A practical add-on for buyers putting together a receiver and speaker setup.",
             "Pioneer Home Audio Receiver": "A versatile home audio receiver with strong brand recognition and a clean sound profile. Great for buyers who want a dependable centerpiece for their listening space.",
             "Compact Stereo Amplifier": "A smaller amplifier that fits neatly into tighter setups while still delivering clear, consistent sound. Good for apartments, desks, or smaller shelves.",
-
             "Yamaha Natural Sound Tuner": "A tuner designed for clean FM and AM playback with Yamaha’s classic understated style. A nice add-on for buyers who want traditional radio in their audio stack.",
             "Digital FM/AM Tuner": "Straightforward digital tuner with simple controls and dependable station access. Best for buyers who want a practical and affordable radio component.",
             "Classic Stereo Tuner": "A traditional stereo tuner with a familiar look and a simple listening experience. A good pick for vintage audio fans and buyers rounding out a stack setup.",
-
             "Sony WH-1000XM4": "Popular wireless headphones known for comfort, strong noise canceling, and a smooth overall sound. A strong choice for everyday listening, travel, and longer sessions.",
             "Bose QuietComfort": "Comfort-focused headphones with soft ear cushions, clear audio, and reliable noise reduction. Great for buyers who want something easy to wear for extended use.",
             "Studio Monitor Headphones": "Closed-back monitor headphones with a straightforward sound profile that works well for detail listening and casual home use. A solid budget-friendly option.",
             "Audio-Technica M50x": "Well-known monitor headphones with clear mids, crisp highs, and a more detailed sound than typical consumer models. Good for buyers who want a more studio-style listening experience.",
             "Wireless Bass Headphones": "Wireless headphones tuned with a stronger low end and an easy everyday fit. A nice option for buyers who prefer a fuller, more energetic sound.",
-
             "Greatest Hits Collection": "A dependable CD pick for buyers who want familiar tracks in one place without having to track down a full catalog. Great for casual listening and quick gifting.",
             "Classic Rock Essentials": "A CD collection built around recognizable classic rock favorites with broad appeal. A simple pickup for buyers who want an easy playlist-style option.",
             "Jazz Favorites Volume 1": "A relaxed jazz compilation with a smooth, easygoing feel that works well for background listening or quieter setups. Nice for buyers wanting something more mellow.",
             "Acoustic Sessions": "A softer acoustic collection with warm vocals and stripped-back arrangements. Great for listeners who prefer a more intimate, laid-back sound.",
-
             "Vinyl Cleaning Brush": "A simple record cleaning brush for knocking dust off before playback. A practical basic accessory that helps keep records and stylus contact cleaner.",
             "Turntable Care Set": "A complete little care kit for buyers who want to keep records, stylus, and surfaces in better shape. A smart add-on for anyone using vinyl regularly.",
             "Stylus Cleaning Gel": "Easy stylus cleaning gel designed to lift dust and buildup with very little effort. Good for regular maintenance and helping playback stay cleaner.",
@@ -228,22 +239,28 @@ class Command(BaseCommand):
             "A nice choice for anyone building out a home audio setup.",
         ]
 
-        products = []
-        for name, category_name, price in product_data:
+        def create_product(name, category_name, price):
             seller = random.choice(sellers)
             product = Product.objects.create(
+                name=name,
                 seller=seller,
                 category=categories[category_name],
-                name=name,
                 description=product_descriptions.get(name, random.choice(fallback_descriptions)),
                 price=price,
                 stock=random.randint(3, 25),
-                is_active=True,
-                is_approved=True,
-                approval_status="Approved",
-                photo=category_image_map[category_name],
+                **product_defaults,
             )
-            products.append(product)
+
+            image_path = seed_photo_dir / image_map[category_name]
+            if image_path.exists():
+                with open(image_path, "rb") as img_file:
+                    product.photo.save(image_path.name, File(img_file), save=True)
+            else:
+                self.stdout.write(self.style.WARNING(f"Missing image: {image_path}"))
+
+            return product
+
+        products = [create_product(name, category_name, price) for name, category_name, price in product_data]
 
         self.stdout.write(self.style.SUCCESS("Creating reviews/comments..."))
 

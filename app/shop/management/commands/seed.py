@@ -85,7 +85,7 @@ class Command(BaseCommand):
                 street="123 Demo Street",
                 city="City",
                 state="MS",
-                zip_code="39759",
+                zipcode="39759",
                 country="US",
                 is_default=True,
             )

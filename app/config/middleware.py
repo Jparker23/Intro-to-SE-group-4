@@ -7,7 +7,13 @@ class BlockBadBotsMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        bad_paths = ["/wp-admin", "/wordpress", "/wp-login.php"]
+        bad_paths = [ "/wp-admin",
+            "/wordpress",
+            "/wp-login.php",
+            "/xmlrpc.php",
+            "/.env",
+            "/phpmyadmin",
+            "/admin.php",]
 
         if any(request.path.startswith(p) for p in bad_paths):
             from django.http import HttpResponseForbidden

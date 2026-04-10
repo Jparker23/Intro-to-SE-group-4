@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from .utils import create_audit_log
 
 
 class Category(models.Model):
@@ -201,4 +202,23 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+#this is so we can view what is going on with the front end from Render logs!!
+class AuditLog(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    username_snapshot = models.CharField(max_length=150, blank=True)
+    role_snapshot = models.CharField(max_length=50, blank=True)
+    action = models.CharField(max_length=255)
+    details = models.TextField(blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    path = models.CharField(max_length=500, blank=True)
+    method = models.CharField(max_length=10, blank=True)
+    target_type = models.CharField(max_length=100, blank=True)
+    target_id = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.created_at} - {self.action}"
     

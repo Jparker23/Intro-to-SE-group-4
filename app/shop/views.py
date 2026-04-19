@@ -4,7 +4,7 @@ from django.views.decorators.cache import never_cache
 from django.db.models import ProtectedError, Sum, Avg
 from django.contrib.auth import get_user_model
 from decimal import Decimal
-from .models import Product, Review, Payout, Address, Notification, Order, Category, OrderItem, Payment, Cart, CartItem, Fee, ReturnRequest, AdminLog
+from .models import Product, Review, Payout, Address, ShippingOption, Notification, Order, Category, OrderItem, Payment, Cart, CartItem, Fee, ReturnRequest, AdminLog
 from .forms import ProductForm
 from cart.views import Cart, CartItem
 from accounts.models import User
@@ -368,6 +368,7 @@ def checkout(request):
 
     saved_addresses = Address.objects.filter(user=request.user)
     saved_payments = Payment.objects.filter(user=request.user, is_saved=True).order_by("-is_default", "-payment_date")    
+    shipping_options = ShippingOption.objects.filter(is_active=True)
     errors = {}
     
     invalid_items = []
@@ -379,18 +380,28 @@ def checkout(request):
             invalid_items.append(f"{product.name} does not have enough stock.")
 
     if invalid_items:
-        return render(request,"generic/checkout.html", {"errors": {"cart": " ".join(invalid_items)},"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": Decimal("0.00"),"tax": Decimal("0.00"),"fees": Decimal("0.00"),"total": Decimal("0.00"),},)
+        return render(request,"generic/checkout.html", {"errors": {"cart": " ".join(invalid_items)},"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": Decimal("0.00"),"tax": Decimal("0.00"),"fees": Decimal("0.00"),"shipping_options": shipping_options,"total": Decimal("0.00"),},)
     
     subtotal = sum((item.product.price * item.quantity for item in cart_items), Decimal("0.00"))
     tax = (subtotal * TAX_RATE_DECIMAL)
-    fees = DEFAULT_SHIPPING_FEE
+    selected_shipping_code = request.POST.get("shipping_option")
+    selected_shipping = None
+
+    if selected_shipping_code:
+        selected_shipping = ShippingOption.objects.filter(code=selected_shipping_code,is_active=True).first()
+
+    fees = selected_shipping.base_price if selected_shipping else DEFAULT_SHIPPING_FEE
     total = (subtotal + tax + fees)
 
     if request.method == "POST":
+        errors = {}
+
+        if not selected_shipping:
+            errors["shipping_option"] = "Please select a shipping option."
+
         selected_address = request.POST.get("saved_address")
         selected_payment = request.POST.get("saved_payment")
-
-        errors = {}
+        
         if selected_address:
             shipping_address = get_object_or_404(Address, id=selected_address, user=request.user)
         else:
@@ -402,7 +413,6 @@ def checkout(request):
             zipcode = request.POST.get("zipcode", "").strip()
             country = request.POST.get("country", "").strip()
 
-            errors = {}
 
             if not first:
                 errors["first_name"] = "First name is required."
@@ -418,7 +428,7 @@ def checkout(request):
                 errors["zipcode"] = "ZIP code is required."
             if not country:
                 errors["country"] = "Country is required."
-
+   
             shipping_address = None
             if not errors:
                 shipping_address = Address.objects.create(user=request.user,full_name=f"{first} {last}", street=street,city=city,state=state,zipcode=zipcode,country=country,is_default=False,)
@@ -438,12 +448,6 @@ def checkout(request):
 
         if not payment_method:
             errors["payment_method"] = "Payment method is required."
-
-        cardholder_name = ""
-        card_brand = ""
-        card_last4 = ""
-        exp_month = ""
-        exp_year = ""
 
         if selected_payment:
             selected_saved_payment = get_object_or_404(Payment,id=selected_payment,user=request.user,is_saved=True,)
@@ -478,12 +482,12 @@ def checkout(request):
                 card_last4 = card_number[-4:]
 
         if errors:
-            return render(request,"generic/checkout.html",{"errors": errors,"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": subtotal,"tax": tax,"fees": fees,"total": total,},)
+            return render(request,"generic/checkout.html",{"errors": errors,"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": subtotal,"tax": tax,"fees": fees,"shipping_options": shipping_options,"total": total,},)
 
        
         # Create order + items + payment
         with transaction.atomic():
-            order = Order.objects.create(buyer=request.user,shipping_address=shipping_address,subtotal=subtotal,tax_rate=TAX_RATE_PERCENT,tax=tax,fee=fees,total=total,status="Processing",)
+            order = Order.objects.create(buyer=request.user,shipping_address=shipping_address,subtotal=subtotal,tax_rate=TAX_RATE_PERCENT,tax=tax,fee=fees,total=total,status="Processing",shipping_option=selected_shipping, shipping_option_name=selected_shipping.name if selected_shipping else "Standard", shipping_price=fees,)
 
             for item in cart_items:
                 if item.quantity > item.product.stock:
@@ -509,10 +513,10 @@ def checkout(request):
 
             cart_items.delete()
             create_audit_log(request, action="ORDER_CREATED", details=f"Order {order.pk} total={total}", target_type="Order", target_id=order.pk,)
-
+            
         return redirect("orderConf")
 
-    return render(request,"generic/checkout.html",{"errors": {},"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": subtotal,"tax": tax,"fees": fees,"total": total,},)
+    return render(request,"generic/checkout.html",{"errors": {},"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": subtotal,"tax": tax,"fees": fees,"shipping_options": shipping_options,"total": total,},)
 
 
 #This is the address logic here, handles saving addresses to accounts, setting default shipping addresses, and deleting the addresses

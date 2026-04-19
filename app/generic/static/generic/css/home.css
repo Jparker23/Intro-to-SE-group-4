@@ -7,7 +7,7 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background-color: #f8f9fa;
+  background-color: transparent;
   font-family: Arial, sans-serif;
 }
 
@@ -309,7 +309,7 @@ img {
   width: 100%;
 }
 
-/* tablet */
+
 @media (max-width: 991.98px) {
   .title {
     font-size: 2.3rem;
@@ -433,4 +433,54 @@ img {
   .menuIcon.change {
   display: none;
 }
+
+html,
+body {
+  background-color: transparent;
+}
+
+
+body.theme-dark .title,
+body.theme-dark .prodPage {
+  color: #f1f3f4 !important;
+}
+
+body.theme-dark .topRight {
+  color: #e4e6eb;
+}
+
+body.theme-dark .brandHdrContainer {
+  background-color: #2f4757 !important;
+}
+
+body.theme-dark .productCard {
+  background-color: #242526 !important;
+  border: 1px solid #3a3b3c !important;
+}
+
+body.theme-dark .productName,
+body.theme-dark .productPrice {
+  color: #8ab4f8 !important;
+}
+
+body.theme-dark .productDesc {
+  color: #d0d3d7 !important;
+}
+
+
+body.theme-high .title,
+body.theme-high .prodPage,
+body.theme-high .productName,
+body.theme-high .productPrice,
+body.theme-high .productDesc,
+body.theme-high .brandbar .logo,
+body.theme-high .brandbar a {
+  color: #fff !important;
+}
+
+body.theme-high .productCard {
+  background-color: #000 !important;
+  border: 2px solid #fff !important;
+}
+
 }

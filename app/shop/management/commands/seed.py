@@ -5,7 +5,7 @@ from django.core.files import File
 from django.utils import timezone
 import random
 
-from shop.models import Product, Review, Category, Order, OrderItem, Payment, Address
+from shop.models import Product, Review, Category, Order, OrderItem, Payment, Address, ShippingOption
 from accounts.models import User
 
 
@@ -119,7 +119,37 @@ class Command(BaseCommand):
             "Cleaning Kit",
         ]:
             categories[name], _ = Category.objects.get_or_create(name=name)
+       
+        self.stdout.write(self.style.SUCCESS("Creating shipping options..."))
 
+        ShippingOption.objects.all().delete()
+
+        ShippingOption.objects.create(
+            name="Standard Shipping",
+            code="standard",
+            description="Delivers in 5–7 business days",
+            base_price=Decimal("6.99"),
+            estimated_days_min=5,
+            estimated_days_max=7,
+        )
+
+        ShippingOption.objects.create(
+            name="Priority Shipping",
+            code="priority",
+            description="Delivers in 2–3 business days",
+            base_price=Decimal("12.99"),
+            estimated_days_min=2,
+            estimated_days_max=3,
+        )
+
+        ShippingOption.objects.create(
+            name="Eco-Friendly Shipping",
+            code="eco",
+            description="Lower carbon footprint, slower delivery (6–10 days)",
+            base_price=Decimal("4.99"),
+            estimated_days_min=6,
+            estimated_days_max=10,
+        )
         self.stdout.write(self.style.SUCCESS("Creating buyer addresses..."))
 
         city_options = [

@@ -1,9 +1,10 @@
 from django.shortcuts import render,redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import ProtectedError, Sum
+from django.views.decorators.cache import never_cache
+from django.db.models import ProtectedError, Sum, Avg
 from django.contrib.auth import get_user_model
 from decimal import Decimal
-from .models import Product, Payout, Address, Order, Category, OrderItem, Payment, Cart, CartItem, Fee, ReturnRequest, AdminLog
+from .models import Product, Review, Payout, Address, ShippingOption, Notification, Order, Category, OrderItem, Payment, Cart, CartItem, Fee, ReturnRequest, AdminLog
 from .forms import ProductForm
 from cart.views import Cart, CartItem
 from accounts.models import User
@@ -12,7 +13,11 @@ from django.utils import timezone
 from django.contrib import messages
 import resend
 from django.conf import settings
-from django.views.decorators.cache import never_cache
+from django.http import HttpResponse
+from django.utils.feedgenerator import Rss201rev2Feed
+from .utils import create_audit_log
+
+
 
 
 TAX_RATE_PERCENT = Decimal("10.00")
@@ -70,7 +75,9 @@ def buyer_only_catalog(request):
 @never_cache
 @login_required
 def adminCatalog(request):
+   
     if request.user.role != "admin":
+        create_audit_log(request, action="FORBIDDEN_ADMIN_ROUTE_ACCESS",details="Non-admin attempted admin-only action",)
         return redirect("home")
 
     query = request.GET.get("query", "").strip()
@@ -108,6 +115,7 @@ def adminCatalog(request):
 @login_required
 def adminModeration(request):
     if request.user.role != "admin":
+        create_audit_log(request, action="FORBIDDEN_ADMIN_ROUTE_ACCESS",details="Non-admin attempted admin-only action",)
         return redirect("home")
 
     pending_products = Product.objects.filter(approval_status="Pending").select_related("seller", "category")
@@ -160,8 +168,9 @@ def returnReq(request): #rewrote to include tax in the return amount
             refund_amount = item_subtotal * Decimal("1.10") 
 
             ReturnRequest.objects.create(buyer=request.user, order_item=order_item, reason=reason, status="Pending", refund_amount=refund_amount,)
+            create_audit_log( request, action="RETURN_REQUEST_CREATED", details=f"OrderItem {order_item.pk} refund={refund_amount}", target_type="ReturnRequest", )
             return redirect("returns")
-
+    
     return render(request, "generic/returnReq.html", {"order_item": order_item})
 
 @never_cache
@@ -187,6 +196,7 @@ def sellerProducts(request, pk):
 def createProd(request):
     if request.user.role != "seller":
         return redirect("home")
+    
 
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES)
@@ -199,6 +209,7 @@ def createProd(request):
             product.redirect_int = None
             product.deleted_at = None
             product.save()
+            create_audit_log(request, action="SELLER_CREATED_PRODUCT", details=f"{product.name}", target_type="Product", target_id=product.pk, )
             return redirect("sellerInventory")
     else:
         form = ProductForm()
@@ -273,7 +284,7 @@ def editProd(request, pk):
 
             if updated_fields:
                 product.save(update_fields=updated_fields)
-
+            create_audit_log(request, action="SELLER_UPDATED_PRODUCT", details=f"{product.name} updated fields={updated_fields}",target_type="Product",target_id=product.pk, )
             return redirect("sellerInventory")
 
         with transaction.atomic():
@@ -293,9 +304,9 @@ def editProd(request, pk):
             product.redirect_int = new_product # type: ignore[assignment]
             product.orbit_int = False
             product.save(update_fields=["redirect_int", "orbit_int"])
-
+            create_audit_log(request, action="SELLER_EDIT_CREATED_NEW_VERSION", details=f"{product.name} → {new_product.name}", target_type="Product", target_id=new_product.pk,)
         return redirect("sellerInventory")
-
+        
     return render(request, "generic/edit-item.html", {"product": product, "categories": categories})
   
 @never_cache
@@ -307,6 +318,7 @@ def delistProd(request, pk):
     if request.method == "POST":
          product.deleted_at = timezone.now()
          product.save(update_fields=["deleted_at"])
+    create_audit_log( request, action="SELLER_DELISTED_PRODUCT", details=f"{product.name}", target_type="Product", target_id=product.pk, )
     return redirect("sellerInventory")
 
 def comparison(request):
@@ -323,7 +335,27 @@ def prod_details(request, pk):
     if product.redirect_int is not None:
         return redirect("prod_details", pk=product.redirect_int.pk)
 
-    return render(request, "generic/product.html", {"product": product})
+    if request.user.is_authenticated and request.user.role == "admin":
+        reviews = Review.objects.filter(product=product).select_related("buyer")
+    else:
+        reviews = Review.objects.filter(product=product, is_hidden=False).select_related("buyer")
+
+    average_rating = Review.objects.filter(product=product, is_hidden=False).aggregate(avg=Avg("rating"))["avg"]
+
+    can_review = False
+    user_review = None
+
+    if request.user.is_authenticated and request.user.role == "buyer":
+        has_purchased = OrderItem.objects.filter(order__buyer=request.user, product=product,).exists()
+
+        can_review = has_purchased
+        user_review = Review.objects.filter(product=product, buyer=request.user).first()
+
+    context = {"product": product,
+"reviews": reviews,
+"average_rating": average_rating, "can_review": can_review,"user_review": user_review,}
+
+    return render(request, "generic/product.html", context)
 
 @never_cache
 @login_required
@@ -336,6 +368,7 @@ def checkout(request):
 
     saved_addresses = Address.objects.filter(user=request.user)
     saved_payments = Payment.objects.filter(user=request.user, is_saved=True).order_by("-is_default", "-payment_date")    
+    shipping_options = ShippingOption.objects.filter(is_active=True)
     errors = {}
     
     invalid_items = []
@@ -347,18 +380,28 @@ def checkout(request):
             invalid_items.append(f"{product.name} does not have enough stock.")
 
     if invalid_items:
-        return render(request,"generic/checkout.html", {"errors": {"cart": " ".join(invalid_items)},"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": Decimal("0.00"),"tax": Decimal("0.00"),"fees": Decimal("0.00"),"total": Decimal("0.00"),},)
+        return render(request,"generic/checkout.html", {"errors": {"cart": " ".join(invalid_items)},"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": Decimal("0.00"),"tax": Decimal("0.00"),"fees": Decimal("0.00"),"shipping_options": shipping_options,"total": Decimal("0.00"),},)
     
     subtotal = sum((item.product.price * item.quantity for item in cart_items), Decimal("0.00"))
     tax = (subtotal * TAX_RATE_DECIMAL)
-    fees = DEFAULT_SHIPPING_FEE
+    selected_shipping_code = request.POST.get("shipping_option")
+    selected_shipping = None
+
+    if selected_shipping_code:
+        selected_shipping = ShippingOption.objects.filter(code=selected_shipping_code,is_active=True).first()
+
+    fees = selected_shipping.base_price if selected_shipping else DEFAULT_SHIPPING_FEE
     total = (subtotal + tax + fees)
 
     if request.method == "POST":
+        errors = {}
+
+        if not selected_shipping:
+            errors["shipping_option"] = "Please select a shipping option."
+
         selected_address = request.POST.get("saved_address")
         selected_payment = request.POST.get("saved_payment")
-
-        errors = {}
+        
         if selected_address:
             shipping_address = get_object_or_404(Address, id=selected_address, user=request.user)
         else:
@@ -370,7 +413,6 @@ def checkout(request):
             zipcode = request.POST.get("zipcode", "").strip()
             country = request.POST.get("country", "").strip()
 
-            errors = {}
 
             if not first:
                 errors["first_name"] = "First name is required."
@@ -386,7 +428,7 @@ def checkout(request):
                 errors["zipcode"] = "ZIP code is required."
             if not country:
                 errors["country"] = "Country is required."
-
+   
             shipping_address = None
             if not errors:
                 shipping_address = Address.objects.create(user=request.user,full_name=f"{first} {last}", street=street,city=city,state=state,zipcode=zipcode,country=country,is_default=False,)
@@ -406,12 +448,6 @@ def checkout(request):
 
         if not payment_method:
             errors["payment_method"] = "Payment method is required."
-
-        cardholder_name = ""
-        card_brand = ""
-        card_last4 = ""
-        exp_month = ""
-        exp_year = ""
 
         if selected_payment:
             selected_saved_payment = get_object_or_404(Payment,id=selected_payment,user=request.user,is_saved=True,)
@@ -446,12 +482,12 @@ def checkout(request):
                 card_last4 = card_number[-4:]
 
         if errors:
-            return render(request,"generic/checkout.html",{"errors": errors,"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": subtotal,"tax": tax,"fees": fees,"total": total,},)
+            return render(request,"generic/checkout.html",{"errors": errors,"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": subtotal,"tax": tax,"fees": fees,"shipping_options": shipping_options,"total": total,},)
 
        
         # Create order + items + payment
         with transaction.atomic():
-            order = Order.objects.create(buyer=request.user,shipping_address=shipping_address,subtotal=subtotal,tax_rate=TAX_RATE_PERCENT,tax=tax,fee=fees,total=total,status="Processing",)
+            order = Order.objects.create(buyer=request.user,shipping_address=shipping_address,subtotal=subtotal,tax_rate=TAX_RATE_PERCENT,tax=tax,fee=fees,total=total,status="Processing",shipping_option=selected_shipping, shipping_option_name=selected_shipping.name if selected_shipping else "Standard", shipping_price=fees,)
 
             for item in cart_items:
                 if item.quantity > item.product.stock:
@@ -459,10 +495,12 @@ def checkout(request):
 
                 order_item=OrderItem.objects.create(order=order,product=item.product,seller=item.product.seller,quantity=item.quantity,price_at_purchase=item.product.price,status="Processing",)
                 Payout.objects.create(seller=item.product.seller, order_item=order_item, amount=order_item.price_at_purchase * order_item.quantity, status="Paid", paid_at=timezone.now(),)
-
+                
 
                 item.product.stock -= item.quantity
                 item.product.save(update_fields=["stock"])
+                Notification.objects.create(seller=order_item.product.seller, order=order, order_item=order_item, message=f"{order_item.product.name} was ordered.",)
+
 
             Fee.objects.create(order=order,fee_type="Shipping",amount=fees,)
 
@@ -474,10 +512,11 @@ def checkout(request):
             Payment.objects.create(user=request.user,order=order,payment_method=payment_method,payment_status="Completed",cardholder_name=cardholder_name,card_brand=card_brand,card_last4=card_last4,exp_month=exp_month,exp_year=exp_year,is_saved=False,is_default=False,)
 
             cart_items.delete()
-
+            create_audit_log(request, action="ORDER_CREATED", details=f"Order {order.pk} total={total}", target_type="Order", target_id=order.pk,)
+            
         return redirect("orderConf")
 
-    return render(request,"generic/checkout.html",{"errors": {},"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": subtotal,"tax": tax,"fees": fees,"total": total,},)
+    return render(request,"generic/checkout.html",{"errors": {},"cart_items": cart_items,"saved_addresses": saved_addresses,"saved_payments": saved_payments,"subtotal": subtotal,"tax": tax,"fees": fees,"shipping_options": shipping_options,"total": total,},)
 
 
 #This is the address logic here, handles saving addresses to accounts, setting default shipping addresses, and deleting the addresses
@@ -601,6 +640,7 @@ def sellerPayouts(request):
 @login_required
 def approve_product(request, pk):
     if request.user.role != "admin":
+        create_audit_log( request, action="FORBIDDEN_ADMIN_ROUTE_ACCESS", details=f"Non-admin attempted approve_product for product_id={pk}", target_type="Product", target_id=pk,)
         return redirect("home")
 
     product = get_object_or_404(Product, pk=pk)
@@ -608,8 +648,14 @@ def approve_product(request, pk):
     product.is_active = True
     product.approval_status = "Approved"
     product.save(update_fields=["is_approved", "is_active", "approval_status"])
-    
-    AdminLog.objects.create(admin=request.user, action_type="Approve Product", target_type="Product", target_id=product.pk,)
+
+    create_audit_log(
+        request,
+        action="ADMIN_APPROVED_PRODUCT",
+        details=f"Approved product {product.name}",
+        target_type="Product",
+        target_id=product.pk,
+    )
 
     return redirect("adminModeration")
 
@@ -618,6 +664,7 @@ def approve_product(request, pk):
 @login_required
 def deny_product(request, pk):
     if request.user.role != "admin":
+        create_audit_log( request, action="FORBIDDEN_ADMIN_ROUTE_ACCESS", details=f"Non-admin attempted deny_product for product_id={pk}", target_type="Product", target_id=pk,)
         return redirect("home")
 
     product = get_object_or_404(Product, pk=pk)
@@ -626,7 +673,7 @@ def deny_product(request, pk):
     product.approval_status = "Rejected"
     product.save(update_fields=["is_approved", "is_active", "approval_status"])
 
-    AdminLog.objects.create( admin=request.user, action_type="Deny Product", target_type="Product", target_id=product.pk,)
+    create_audit_log( request, action="ADMIN_DENIED_PRODUCT", details=f"Denied product {product.name}", target_type="Product", target_id=product.pk, )
 
     return redirect("adminModeration")
 
@@ -635,6 +682,7 @@ def deny_product(request, pk):
 @login_required
 def approve_return(request, pk):
     if request.user.role != "admin":
+        create_audit_log( request, action="FORBIDDEN_ADMIN_ROUTE_ACCESS", details=f"Non-admin attempted approve_return for return_request_id={pk}", target_type="ReturnRequest", target_id=pk,)
         return redirect("home")
 
     return_request = get_object_or_404(ReturnRequest, pk=pk)
@@ -647,7 +695,7 @@ def approve_return(request, pk):
         order_item.status = "Returned"
         order_item.save(update_fields=["status"])
 
-        Payment.objects.filter(order=order_item.order,payment_status="Completed").update(payment_status="Refunded")
+        Payment.objects.filter( order=order_item.order, payment_status="Completed" ).update(payment_status="Refunded")
 
         payout = Payout.objects.filter(order_item=order_item).first()
         if payout:
@@ -655,7 +703,7 @@ def approve_return(request, pk):
             payout.status = "Refunded"
             payout.save(update_fields=["amount", "status"])
 
-        AdminLog.objects.create(admin=request.user,action_type="Approve Return",target_type="ReturnRequest",target_id=return_request.pk,)
+        create_audit_log(request, action="ADMIN_APPROVED_RETURN", details=f"Approved return request {return_request.pk} for order_item_id={order_item.pk}", target_type="ReturnRequest", target_id=return_request.pk,)
 
     return redirect("adminModeration")
 
@@ -664,6 +712,7 @@ def approve_return(request, pk):
 @login_required
 def deny_return(request, pk):
     if request.user.role != "admin":
+        create_audit_log(request, action="FORBIDDEN_ADMIN_ROUTE_ACCESS", details=f"Non-admin attempted deny_return for return_request_id={pk}", target_type="ReturnRequest", target_id=pk, )
         return redirect("home")
 
     return_request = get_object_or_404(ReturnRequest, pk=pk)
@@ -672,7 +721,7 @@ def deny_return(request, pk):
         return_request.status = "Denied"
         return_request.save(update_fields=["status"])
 
-        AdminLog.objects.create( admin=request.user, action_type="Deny Return", target_type="ReturnRequest", target_id=return_request.pk,)
+        create_audit_log( request, action="ADMIN_DENIED_RETURN", details=f"Denied return request {return_request.pk}", target_type="ReturnRequest", target_id=return_request.pk, )
 
     return redirect("adminModeration")
 
@@ -681,17 +730,19 @@ def deny_return(request, pk):
 @login_required
 def approve_user(request, pk):
     if request.user.role != "admin":
+        create_audit_log(request, action="FORBIDDEN_ADMIN_ROUTE_ACCESS", details=f"Non-admin attempted approve_user for user_id={pk}", target_type="User", target_id=pk, )
         return redirect("home")
 
     user = get_object_or_404(User, pk=pk)
-
     user.is_approved = True
     user.save(update_fields=["is_approved"])
+
+    create_audit_log( request, action="ADMIN_APPROVED_USER", details=f"Approved user {user.username}", target_type="User", target_id=user.pk, )
 
     if settings.RESEND_API_KEY and user.email:
         try:
             resend.api_key = settings.RESEND_API_KEY
-            resend.Emails.send({"from": settings.RESEND_FROM_EMAIL, "to": [user.email], "subject": "Your Amplify account has been approved", "text": ( f"Hello {user.username},\n\n" "Your account has been approved. You can now log in to the site.\n\n" "Thank you,\n" "Amplify Team"),})
+            resend.Emails.send({"from": settings.RESEND_FROM_EMAIL, "to": [user.email], "subject": "Your Amplify account has been approved", "text": (f"Hello {user.username},\n\n" "Your account has been approved. You can now log in to the site.\n\n" "Thank you,\n" "Amplify Team"),})
             messages.success(request, f"{user.username} was approved and notified by email.")
         except Exception as e:
             messages.warning(request, f"{user.username} was approved, but the email could not be sent: {e}")
@@ -705,12 +756,141 @@ def approve_user(request, pk):
 @login_required
 def deny_user(request, pk):
     if request.user.role != "admin":
+        create_audit_log(request, action="FORBIDDEN_ADMIN_ROUTE_ACCESS", details=f"Non-admin attempted deny_user for user_id={pk}", target_type="User", target_id=pk,)
         return redirect("home")
 
     user = get_object_or_404(User, pk=pk)
-    user.delete()  
+    denied_username = user.username
+    denied_user_id = user.pk
 
-    AdminLog.objects.create(admin=request.user, action_type="Deny User", target_type="User", target_id=user.pk,)
+    create_audit_log(request, action="ADMIN_DENIED_USER", details=f"Denied and deleted user {denied_username}", target_type="User", target_id=denied_user_id,)
 
+    user.delete()
     return redirect("adminModeration")
 
+@login_required
+def submit_review(request, product_id):
+    product = get_object_or_404(Product, pk=product_id, is_active=True)
+
+    if request.user.role != "buyer":
+        messages.error(request, "Only buyers can leave reviews.")
+        return redirect("prod_details", pk=product.pk)
+
+    has_purchased = OrderItem.objects.filter(order__buyer=request.user, product=product, ).exists()
+
+    if not has_purchased:
+        messages.error(request, "You can only review products you have purchased.")
+        return redirect("prod_details", pk=product.pk)
+
+    existing_review = Review.objects.filter(product=product, buyer=request.user).first()
+
+    if request.method == "POST":
+        rating = request.POST.get("rating")
+        comment = (request.POST.get("comment") or "").strip()
+
+        try:
+            rating = int(rating)
+        except (TypeError, ValueError):
+            messages.error(request, "Please select a valid rating.")
+            return redirect("prod_details", pk=product.pk)
+
+        if rating < 1 or rating > 5:
+            messages.error(request, "Rating must be between 1 and 5.")
+            return redirect("prod_details", pk=product.pk)
+
+        if existing_review:
+            existing_review.rating = rating
+            existing_review.comment = comment
+            existing_review.save()
+
+            if existing_review.is_hidden:
+                messages.success(request, "Your review was updated and is still hidden pending admin visibility.")
+            else:
+                messages.success(request, "Your review was updated.")
+        else:
+            Review.objects.create(product=product, buyer=request.user, rating=rating, comment=comment,)
+            messages.success(request, "Your review was submitted.")
+    create_audit_log(request, action="REVIEW_SUBMITTED", details=f"{product.name} rating={rating}", target_type="Product", target_id=product.pk,)
+    return redirect("prod_details", pk=product.pk)
+
+#this is so admins can remove any wrongful reviews/comments made by buyers!
+@login_required
+def hide_review(request, review_id):
+    review = get_object_or_404(Review, pk=review_id)
+
+    if request.user.role != "admin":
+        messages.error(request, "You are not authorized to do that.")
+        return redirect("prod_details", pk=review.product.id)
+
+    review.is_hidden = True
+    review.save()
+    messages.success(request, "Review hidden successfully.")
+    create_audit_log( request, action="ADMIN_HID_REVIEW", details=f"Review {review.pk}", target_type="Review", target_id=review.pk,)
+    return redirect("prod_details", pk=review.product.id)
+
+
+@login_required
+def unhide_review(request, review_id):
+    review = get_object_or_404(Review, pk=review_id)
+
+    if request.user.role != "admin":
+        messages.error(request, "You are not authorized to do that.")
+        return redirect("prod_details", pk=review.product.pk)
+
+    review.is_hidden = False
+    review.save()
+    messages.success(request, "Review is visible again.")
+    create_audit_log( request, action="ADMIN_UNHID_REVIEW", details=f"Review {review.pk}", target_type="Review", target_id=review.pk,)
+    return redirect("prod_details", pk=review.product.pk)
+
+
+@login_required
+def seller_notifications_rss(request):
+    if request.user.role != "seller":
+        create_audit_log( request, action="FORBIDDEN_RSS_ACCESS", details="Non-seller tried RSS feed",)
+        return redirect("home")
+    notifications = Notification.objects.filter(seller=request.user).select_related("order", "order_item", "order_item__product", "order__shipping_address", ).order_by("-created_at")[:50]
+
+    feed = Rss201rev2Feed(title=f"{request.user.username} Warehouse Order Feed", link="/seller/notifications/rss/", description="Sold-item RSS feed for seller warehouse software", language="en", )
+
+    for notification in notifications:
+        order = notification.order
+        order_item = notification.order_item
+        product = order_item.product
+
+        address = getattr(order, "shipping_address", None)
+
+        if address:
+            ship_to_address = ( f"{address.full_name}, " f"{address.street}, " f"{address.city}, " f"{address.state} {address.zipcode}, " f"{address.country}")
+        else:
+            ship_to_address = "No shipping address found"
+
+        description = ( f"Product Name: {product.name}\n" f"Quantity: {order_item.quantity}\n" f"Ship-To Address: {ship_to_address}\n" f"Order Date/Time: {timezone.localtime(order.created_at)}\n" )
+
+        feed.add_item(title=f"New Order - {product.name}", link=f"/api/products/{product.pk}/", description=description, pubdate=order.created_at,unique_id=f"seller-{request.user.pk}-notification-{notification.pk}",)
+
+    rss_output = feed.writeString("utf-8")
+    
+    
+    
+    return HttpResponse(rss_output, content_type="application/rss+xml")
+
+@login_required
+def seller_notifications(request):
+    if request.user.role != "seller":
+        return redirect("home")
+
+    notifications = Notification.objects.filter(seller=request.user).select_related("order", "order_item", "order_item__product").order_by("-created_at")
+
+    return render(request, "generic/seller-notifications.html", {"notifications": notifications})
+
+@login_required
+def mark_notification_read(request, notification_id):
+    if request.user.role != "seller":
+        return redirect("home")
+
+    notification = get_object_or_404( Notification, pk=notification_id, seller=request.user)
+    notification.is_read = True
+    notification.save()
+
+    return redirect("seller_notifications")

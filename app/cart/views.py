@@ -4,10 +4,14 @@ from django.views.decorators.http import require_POST
 from shop.models import Product, Cart, CartItem
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
+from shop.utils import create_audit_log
+from functools import wraps
 
 def buyer_required(view_func):
+    @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if request.user.role != "buyer":
+            create_audit_log( request, action="FORBIDDEN_BUYER_ROUTE_ACCESS", details=f"Non-buyer tried to access buyer-only view {view_func.__name__}", )
             return redirect("home")
         return view_func(request, *args, **kwargs)
     return wrapper
@@ -54,6 +58,9 @@ def add_to_cart(request, product_id):
         item.quantity = min(item.quantity + quantity, product.stock)
 
     item.save()
+
+    create_audit_log(request, action="ADD_TO_CART", details=f"Added/updated {product.name} to cart with quantity={item.quantity}", target_type="Product", target_id=product.pk, )
+
     return redirect(request.META.get("HTTP_REFERER", "/api/catalog/"))
 
 
@@ -64,6 +71,9 @@ def add_to_cart(request, product_id):
 def remove_from_cart(request, item_id):
     cart, _ = Cart.objects.get_or_create(buyer=request.user)
     item = get_object_or_404(CartItem, id=item_id, cart=cart)
+
+    create_audit_log(request, action="REMOVE_FROM_CART", details=f"Removed {item.product.name} from cart", target_type="Product", target_id=item.product.pk, )
+
     item.delete()
     return redirect("cart:cart_details")
 
@@ -78,9 +88,12 @@ def update_cart_item(request, product_id):
     quantity = int(request.POST.get("quantity", 1))
 
     if quantity <= 0:
+        create_audit_log( request, action="REMOVE_FROM_CART_VIA_UPDATE", details=f"Removed {item.product.name} from cart by setting quantity <= 0", target_type="Product", target_id=item.product.pk, )
         item.delete()
     else:
         item.quantity = min(quantity, item.product.stock)
         item.save()
+
+        create_audit_log(request, action="UPDATE_CART_ITEM", details=f"Updated {item.product.name} quantity to {item.quantity}", target_type="Product", target_id=item.product.pk, )
 
     return redirect("cart:cart_details")

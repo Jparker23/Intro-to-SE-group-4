@@ -5,7 +5,7 @@
 body {
   margin: 0;
   overflow-x: hidden;
-  background-color: #f8f9fa;
+  background-color: transparent;
 }
 
 img {
@@ -225,5 +225,115 @@ img {
   
   .btn {
     font-size: 0.95rem;
+  }
+  /* let global theme control the page background */
+  html,
+  body {
+    background-color: transparent;
+  }
+  
+  /* DARK MODE support for seller pages */
+  body.theme-dark .title,
+  body.theme-dark .prodPage {
+    color: #f1f3f4 !important;
+  }
+  
+  body.theme-dark .topRight {
+    color: #e4e6eb;
+  }
+  
+  body.theme-dark .LoginContainer {
+    background-color: #2f6f8f !important;
+    color: #f5f5f5 !important;
+  }
+  
+  body.theme-dark .LoginContainer:hover {
+    background-color: #3f87ab !important;
+    color: #ffffff !important;
+  }
+  
+  body.theme-dark .search .form-control,
+  body.theme-dark .searchIcon {
+    background-color: #3a3b3c !important;
+    color: #e4e6eb !important;
+    border-color: #555 !important;
+  }
+  
+  body.theme-dark .searchIcon:hover {
+    background-color: #4a4b4d !important;
+    color: #9fd7eb !important;
+  }
+  
+  body.theme-dark .tabHdrContainer {
+    background-color: #2f4757 !important;
+  }
+  
+  body.theme-dark .tabbar a,
+  body.theme-dark .dashTab {
+    color: #f1f3f4 !important;
+  }
+  
+  body.theme-dark .tabbar a:hover,
+  body.theme-dark .dashTab:hover,
+  body.theme-dark .dashTab.active {
+    background-color: #3a3b3c !important;
+    color: #9fd7eb !important;
+  }
+  
+  body.theme-dark .table,
+  body.theme-dark .table td,
+  body.theme-dark .table th {
+    color: #e4e6eb !important;
+    border-color: #3a3b3c !important;
+  }
+  
+  body.theme-dark .card {
+    background-color: #242526 !important;
+    color: #e4e6eb !important;
+    border: 1px solid #3a3b3c !important;
+  }
+  
+  body.theme-dark .card-body,
+  body.theme-dark .card-footer {
+    background-color: #2a2b2d !important;
+    color: #e4e6eb !important;
+  }
+  
+  body.theme-dark .badge {
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  
+  /* HIGH CONTRAST support for seller pages */
+  body.theme-high .title,
+  body.theme-high .prodPage,
+  body.theme-high .tabbar a,
+  body.theme-high .dashTab,
+  body.theme-high .table,
+  body.theme-high .table td,
+  body.theme-high .table th,
+  body.theme-high .card,
+  body.theme-high .card-body,
+  body.theme-high .card-footer,
+  body.theme-high .badge {
+    color: #fff !important;
+  }
+  
+  body.theme-high .LoginContainer,
+  body.theme-high .search .form-control,
+  body.theme-high .searchIcon,
+  body.theme-high .card,
+  body.theme-high .card-body,
+  body.theme-high .card-footer,
+  body.theme-high .tabHdrContainer {
+    background-color: #000 !important;
+    color: #fff !important;
+    border: 2px solid #fff !important;
+  }
+  
+  body.theme-high .tabbar a:hover,
+  body.theme-high .dashTab:hover,
+  body.theme-high .dashTab.active {
+    background-color: #fff !important;
+    color: #000 !important;
   }
 }

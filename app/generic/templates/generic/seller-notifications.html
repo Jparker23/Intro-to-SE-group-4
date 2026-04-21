@@ -1,0 +1,27 @@
+{% extends "generic/base.html" %}
+{% load static tz %}
+
+{% block title %}Seller Notifications{% endblock %}
+
+{% block body %}
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Seller Notifications</h2>
+    <a href="{% url 'seller_notifications_rss' %}" class="btn btn-outline-primary btn-sm">
+      RSS Feed
+    </a>
+  </div>
+
+  {% for notification in notifications %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <p class="mb-1"><strong>{{ notification.order_item.product.name }}</strong></p>
+        <p class="mb-1">{{ notification.message }}</p>
+        <small class="text-muted">{{ notification.created_at|localtime|date:"M d, Y g:i A" }}</small>
+      </div>
+    </div>
+  {% empty %}
+    <p>No notifications yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

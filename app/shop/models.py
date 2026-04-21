@@ -3,6 +3,9 @@ from django.conf import settings
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from .utils import create_audit_log
 
 
 class Category(models.Model):
@@ -71,11 +74,27 @@ class Address(models.Model):
     def __str__(self):
         return self.full_name
 
+#adding in eco friendly shipping options for our second feature-madee
+class ShippingOption(models.Model):
+    name = models.CharField(max_length=100)   # Standard, Expedited, Overnight
+    code = models.CharField(max_length=30, unique=True)
+    description = models.TextField(blank=True)
+    base_price = models.DecimalField(max_digits=8, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    estimated_days_min = models.PositiveIntegerField(null=True, blank=True)
+    estimated_days_max = models.PositiveIntegerField(null=True, blank=True)
 
+    def __str__(self):
+        return self.name
+    
 class Order(models.Model):
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
     shipping_address = models.ForeignKey(Address, on_delete=models.PROTECT, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    shipping_option = models.ForeignKey(ShippingOption, on_delete=models.SET_NULL, null=True, blank=True)
+    shipping_option_name = models.CharField(max_length=100, blank=True)
+    shipping_price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    shipping_details = models.JSONField(default=dict, blank=True)
     STATUS_CHOICES = [("Processing", "Processing"), ("Shipping", "Shipping"), ("Completed", "Completed"), ("Returned", "Returned")]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Processing")
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
@@ -168,3 +187,55 @@ class Fee(models.Model):
     def clean(self):
         if not self.order and not self.order_item:
             raise ValidationError("Fee must be attached to an order or an order item.")
+
+
+
+class Review(models.Model):
+    product = models.ForeignKey("Product", on_delete=models.CASCADE, related_name="reviews")
+    buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reviews")
+    rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_hidden = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ("product", "buyer")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.product.name} - {self.buyer.username} ({self.rating}/5)"
+    
+
+#RSS feed
+class Notification(models.Model):
+    seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications")
+    order = models.ForeignKey("Order", on_delete=models.CASCADE, related_name="notifications")
+    order_item = models.ForeignKey("OrderItem", on_delete=models.CASCADE, related_name="notifications")
+    message = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+#this is so we can view what is going on with the front end from Render logs!!
+class AuditLog(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    username_snapshot = models.CharField(max_length=150, blank=True)
+    role_snapshot = models.CharField(max_length=50, blank=True)
+    action = models.CharField(max_length=255)
+    details = models.TextField(blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    path = models.CharField(max_length=500, blank=True)
+    method = models.CharField(max_length=10, blank=True)
+    target_type = models.CharField(max_length=100, blank=True)
+    target_id = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.created_at} - {self.action}"
+    
+

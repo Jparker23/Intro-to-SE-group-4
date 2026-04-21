@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from .serializers import RegisterSerializer, UserSerializer
 from accounts.models import User
+from shop.utils import create_audit_log
 
 
 
@@ -48,10 +49,14 @@ def loginpg(request):
 
             if not user.is_active:
                 errors["login"] = "This account is inactive."
+                create_audit_log( request, action="LOGIN_BLOCKED_INACTIVE", details=f"Inactive account login blocked for username={username}", user=user, )
             elif not user.is_approved:
                 errors["login"] = "This account is pending admin approval."
+                create_audit_log( request, action="LOGIN_BLOCKED_UNAPPROVED", details=f"Unapproved account login blocked for username={username}", user=user,)
             else:
                 auth_login(request, user)
+
+                create_audit_log(request, action="LOGIN_SUCCESS", details=f"Successful login for username={user.username}", user=user,)
 
                 if user.role == "seller":
                     return redirect("sellerInventory")
@@ -61,6 +66,7 @@ def loginpg(request):
                     return redirect("home")
         else:
             errors["login"] = "Invalid username or password."
+            create_audit_log(request, action="LOGIN_FAILED", details=f"Failed login attempt for username={username}",)
 
     response = render(request, "generic/login.html", {"errors": errors})
     response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -71,6 +77,9 @@ def loginpg(request):
 
 @never_cache
 def logoutpg(request):
+    if request.user.is_authenticated:
+        create_audit_log( request, action="LOGOUT", details=f"User {request.user.username} logged out", )
+
     logout(request)
     request.session.flush()
     response = redirect("login")
@@ -109,17 +118,23 @@ def register(request):
             if user.role == "buyer":
                 user.is_approved = True
                 user.save(update_fields=["is_approved"])
+
+                create_audit_log( request, action="REGISTER_BUYER_AUTO_APPROVED", details=f"Buyer account created for username={user.username}", target_type="User", target_id=user.pk, user=user,)
+
                 auth_login(request, user)
                 return redirect("home")
 
             user.is_approved = False
             user.save(update_fields=["is_approved"])
+
+            create_audit_log( request, action="REGISTER_ACCOUNT_PENDING_APPROVAL", details=f"Account created pending approval for username={user.username}, role={user.role}", target_type="User", target_id=user.pk, user=user, )
+
             return redirect("pending_approval")
 
-        print("REGISTER ERRORS:", serializer.errors)
+        create_audit_log( request, action="REGISTER_FAILED", details=f"Registration failed for username={data.get('username', '')}, email={data.get('email', '')}, errors={serializer.errors}",)
         errors = serializer.errors
 
-    response = render(request,"generic/register.html",{"errors": errors,"data": data,},)
+    response = render(request, "generic/register.html", {"errors": errors, "data": data})
     response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response["Pragma"] = "no-cache"
     response["Expires"] = "0"

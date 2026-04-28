@@ -37,10 +37,12 @@
   
   <div class="tabHdrContainer">
     <div class="tabbar">
-      <a href="{% url 'sellerInventory' %}" class="btn dashTab {% if active_tab == 'inventory' %}active{% endif %}">Inventory</a>
-      <a href="{% url 'sellerOrders' %}" class="btn dashTab {% if active_tab == 'orders' %}active{% endif %}">Orders</a>
-      <a href="{% url 'sellerPayouts' %}" class="btn dashTab {% if active_tab == 'orders' %}active{% endif %}">Payouts</a>
-
+      <a href="{% url 'sellerInventory' %}" class="btn dashTab {% if active_tab == 'inventory' %}active{% endif %}">
+        Inventory
+      </a>
+      <a href="{% url 'sellerOrders' %}" class="btn dashTab {% if active_tab == 'orders' %}active{% endif %}">
+        Orders
+      </a>
     </div>
   </div>
 </header>
@@ -56,42 +58,56 @@
   {% if seller_orders %}
   <div class="row g-3">
     {% for item in seller_orders %}
-    <div class="card p-3 mb-3">
-      <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
-        <div>
-          <h5 class="mb-1">Order #{{ item.order.id }}</h5>
-          <p class="mb-0 text-muted">Placed on {{ item.order.created_at|date:"M d, Y" }}</p>
+    <div class="col-12">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-2 mb-3">
+            <div>
+              <h5 class="mb-1">Order #{{ item.order.id }}</h5>
+              <p class="mb-0 text-muted">Placed on {{ item.order.created_at|date:"M d, Y" }}</p>
+            </div>
+            <div>
+              {% if item.status == "Returned" %}
+              <span class="badge bg-danger">Returned</span>
+              {% elif item.status == "Completed" %}
+              <span class="badge bg-success">Completed</span>
+              {% elif item.status == "Processing" %}
+              <span class="badge bg-warning text-dark">Processing</span>
+              {% else %}
+              <span class="badge bg-secondary">{{ item.status }}</span>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-12 col-md-8">
+              <p class="mb-1"><strong>Product:</strong> {{ item.product.name }}</p>
+              <p class="mb-1"><strong>Buyer:</strong> {{ item.order.buyer.username }}</p>
+              <p class="mb-1"><strong>Quantity:</strong> {{ item.quantity }}</p>
+              {% if item.order.shipping_address %}
+              <p class="mb-0">
+                <strong>Ship to:</strong>
+                {{ item.order.shipping_address.full_name }},
+                {{ item.order.shipping_address.street }},
+                {{ item.order.shipping_address.city }},
+                {{ item.order.shipping_address.state }}
+                {{ item.order.shipping_address.zipcode }}
+              </p>
+              {% endif %}
+            </div>
+            
+            <div class="col-12 col-md-4">
+              <div class="bg-light rounded p-3 h-100">
+                <p class="mb-1"><strong>Payout Value:</strong></p>
+                {% if item.status == "Returned" %}
+                <div class="text-danger fw-bold">$0.00</div>
+                {% else %}
+                <div class="fw-bold">${{ item.price_at_purchase|floatformat:2 }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="text-end">
-          <p class="mb-1"><strong>Status:</strong> {{ item.order.status }}</p>
-        </div>
-      </div>
-
-      <hr>
-
-      <div class="d-flex justify-content-between align-items-center flex-wrap">
-        <div>
-          <strong>{{ item.product.name }}</strong><br>
-          <small class="text-muted">
-            Quantity: {{ item.quantity }} |
-            Buyer: {{ item.order.buyer.username }}
-          </small>
-        </div>
-        <div>
-          ${{ item.price_at_purchase|floatformat:2 }}
-        </div>
-      </div>
-
-      {% if item.order.shipping_address %}
-      <div class="mt-2">
-        <small class="text-muted">
-          <strong>Ship to:</strong>
-          {{ item.order.shipping_address.full_name }},
-          {{ item.order.shipping_address.street }},
-          {{ item.order.shipping_address.city }},
-          {{ item.order.shipping_address.state }}
-          {{ item.order.shipping_address.zipcode }}
-        </small>
       </div>
     </div>
     {% endfor %}

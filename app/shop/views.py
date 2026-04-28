@@ -191,6 +191,16 @@ def sellerProducts(request, pk):
     products = _buyer_visible_products().filter(seller=seller)
     return render(request, "generic/seller-products.html", {"products": products, "seller": seller})
 
+@login_required
+def markShipped(request, pk):
+    if request.user.role != "seller":
+        return redirect("home")
+    order_item = get_object_or_404(OrderItem, pk=pk, seller=request.user)
+    if request.method == "POST":
+        order_item.status = "Shipping"
+        order_item.save(update_fields=["status"])
+    return redirect("sellerOrders")
+
 @never_cache
 @login_required
 def createProd(request):

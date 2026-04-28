@@ -58,6 +58,9 @@
       background-color: #03506f;
     }
     
+    .navbar {
+      background-color: #f8f9fa;
+    }
    
     body.theme-dark,
     body.theme-dark html {
@@ -370,8 +373,8 @@
 
 <body class="theme-light text-normal">
   
-  <nav class="navbar navbar-dark bg-dark px-4">
-    <a class="navbar-brand" href="{% url 'home' %}">Amplify</a>
+  <nav class="navbar px-4">
+    <a class="navbar-brand text-dark" href="{% url 'home' %}">Amplify</a>
     <div class="d-flex gap-3">
       {% block nav_right %}{% endblock %}
     </div>

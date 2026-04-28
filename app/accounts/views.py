@@ -121,8 +121,7 @@ def register(request):
 
                 create_audit_log( request, action="REGISTER_BUYER_AUTO_APPROVED", details=f"Buyer account created for username={user.username}", target_type="User", target_id=user.pk, user=user,)
 
-                auth_login(request, user)
-                return redirect("home")
+                return redirect("pending_approval")
 
             user.is_approved = False
             user.save(update_fields=["is_approved"])

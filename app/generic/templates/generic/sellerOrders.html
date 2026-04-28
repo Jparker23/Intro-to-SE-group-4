@@ -4,12 +4,10 @@
 
 {% block body %}
 <link rel="stylesheet" href="{% static 'generic/css/seller.css' %}">
-<!-- Header -->
+
 <header class="py-3 position-relative">
   <h1 class="text-center m-0 title">Amplify</h1>
   
-  
-  <!--Redid the button top right of the page, if the user isnt logged in the login button will be there, if they are logged in it will be account-->
   <div class="topRight">
     {% if request.user.is_authenticated %}
     <a class="LoginContainer" href="{% url 'account' %}">
@@ -22,16 +20,13 @@
       <span>Login</span>
     </a>
     {% endif %}
-    
-    </div>
   </div>
   
-  <!--Search bar with magnifying glass button, that redirects user to the filter catalog page-->
   <div class="container my-3">
     <div class="d-flex justify-content-center">
-      <form method="get" action="/api/catalog/" style="max-width: 600px; width:100%;">
+      <form method="get" action="{% url 'catalog' %}" style="max-width: 600px; width: 100%;">
         <div class="input-group search">
-          <input class="form-control text-center" type="text" name="query" placeholder="Search"/>
+          <input class="form-control text-center" type="text" name="query" placeholder="Search">
           <button class="btn searchIcon" type="submit">
             <i class="fa fa-search"></i>
           </button>
@@ -39,7 +34,6 @@
       </form>
     </div>
   </div>
-  
   
   <div class="tabHdrContainer">
     <div class="tabbar">
@@ -52,10 +46,15 @@
 </header>
 
 <div class="container my-4">
-  <h2>My Sales</h2>
-  <p>Orders containing your products.</p>
-
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-4">
+    <div>
+      <h2 class="mb-0">My Sales</h2>
+      <p class="mb-0 text-muted">Orders containing your products.</p>
+    </div>
+  </div>
+  
   {% if seller_orders %}
+  <div class="row g-3">
     {% for item in seller_orders %}
     <div class="card p-3 mb-3">
       <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
@@ -94,14 +93,13 @@
           {{ item.order.shipping_address.zipcode }}
         </small>
       </div>
-      {% endif %}
     </div>
     {% endfor %}
+  </div>
   {% else %}
-    <div class="card p-3 mb-3">
-      <p class="mb-0">You have no sales yet</p>
-    </div>
+  <div class="card p-3">
+    <p class="mb-0">You have no sales yet.</p>
+  </div>
   {% endif %}
-
 </div>
 {% endblock %}

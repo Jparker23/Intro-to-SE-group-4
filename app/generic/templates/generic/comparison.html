@@ -1,136 +1,119 @@
 {% extends "generic/base.html" %}
-<!-- couldnt keep hardcoded html page but still tried to keep the similar structure! -->
 {% load static %}
+
 {% block title %}Compare Products{% endblock %}
 
 {% block body %}
 <link rel="stylesheet" href="{% static 'generic/css/home.css' %}">
 
-<!--Reworked to make the comparison page match the home/catalog style-->
 <header class="py-3 position-relative">
-  <h1 class="text-center m-0 title">Amplify</h1>
+  <h1 class="text-center m-0 title">Compare Products</h1>
 
   <div class="topRight">
-    {% if request.user.is_authenticated %}
+    {% if request.user.is_authenticated and request.user.role == "buyer" %}
       <a class="LoginContainer" href="{% url 'account' %}">
-        <i class="fa fa-user"></i>
-        <span>Account</span>
+        <i class="fa fa-user"></i><span>Account</span>
+      </a>
+      <a href="{% url 'cart:cart_details' %}" class="iconBtn">
+        <i class="fa fa-shopping-cart"></i>
+      </a>
+    {% elif request.user.is_authenticated %}
+      <a class="LoginContainer" href="{% url 'account' %}">
+        <i class="fa fa-user"></i><span>Account</span>
       </a>
     {% else %}
       <a class="LoginContainer" href="{% url 'login' %}">
-        <i class="fa fa-user"></i>
-        <span>Login</span>
+        <i class="fa fa-user"></i><span>Login</span>
+      </a>
+      <a href="#" class="iconBtn" onclick="cartLoginAlert(); return false;">
+        <i class="fa fa-shopping-cart"></i>
       </a>
     {% endif %}
-
-    <div class="iconRow">
-      {% if request.user.is_authenticated %}
-        <a href="{% url 'account' %}" class="iconBtn"><i class="fa fa-user-circle"></i></a>
-      {% else %}
-        <a href="{% url 'login' %}" class="iconBtn"><i class="fa fa-user-circle"></i></a>
-      {% endif %}
-
-      {% if request.user.is_authenticated %}
-        <a href="/api/cart/" class="iconBtn"><i class="fa fa-shopping-cart"></i></a>
-      {% else %}
-        <a href="#" class="iconBtn" onclick="cartLoginAlert(); return false;"><i class="fa fa-shopping-cart"></i></a>
-      {% endif %}
-    </div>
   </div>
 </header>
 
-<!-- optional search bar to keep same site feel -->
-<div class="container my-3">
-  <div class="d-flex justify-content-center">
-    <form method="get" action="/api/catalog/" style="max-width: 600px; width:100%;">
-      <div class="input-group search">
-        <input class="form-control text-center" type="text" name="query" placeholder="Search">
-        <button class="btn searchIcon" type="submit">
-          <i class="fa fa-search"></i>
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<div class="container py-3">
-  <div class="d-flex align-items-center justify-content-between">
-    <h3 class="m-0 prodPage">Compare Products</h3>
-    <a class="btn catalogButton" href="/api/catalog/">Back to Catalog</a>
-  </div>
-</div>
-
 <div class="container pb-4">
-  {% if products %} <!--product table-->
-  <div class="table-responsive bg-white p-3 rounded shadow-sm mb-4">
-    <table class="table table-bordered align-middle text-center">
-      <tr>
-        <th>Product</th>
-        {% for product in products %}
-        <td>
-          {% if product.photo %}
-            <img src="{{ product.photo.url }}" alt="{{ product.name }}" class="img-fluid rounded mb-2" style="max-height: 180px; object-fit: cover;">
-          {% else %}
-            <div class="photoPlaceholder mb-2">Photo</div>
-          {% endif %}
-          <p class="mb-2">{{ product.name }}</p>
+  {% if products %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="m-0 prodPage">Comparison Results</h3>
+      <small class="text-muted">{{ products|length }} items selected</small>
+    </div>
 
-          <!--add to cart button-->
-          {% if request.user.is_authenticated %}
-          <form method="post" action="{% url 'cart:add_to_cart' product.id %}">
-            {% csrf_token %}
-            <input type="hidden" name="quantity" value="1">
-            <button class="btn btn-sm btn-primary" type="submit">Add to Cart</button>
-          </form>
-          {% else %}
-          <button class="btn btn-sm btn-primary" type="button" onclick="cartLoginAlert(); return false;">
-            Add to Cart
-          </button>
-          {% endif %}
-        </td>
-        {% endfor %}
-      </tr>
+    <div class="row g-4">
+      {% for product in products %}
+        <div class="col-md-6 col-xl-4">
+          <div class="card productCard h-100 shadow-sm">
+            <a href="{% url 'prod_details' product.pk %}" style="text-decoration: none; color: inherit;">
+              {% if product.photo %}
+                <img
+                  src="{{ product.photo.url }}"
+                  alt="{{ product.name }}"
+                  class="card-img-top"
+                  style="height: 230px; object-fit: cover;"
+                >
+              {% else %}
+                <div class="photoPlaceholder d-flex align-items-center justify-content-center" style="height: 230px;">
+                  Photo
+                </div>
+              {% endif %}
 
-      <tr>
-        <th>Price</th>
-        {% for product in products %}
-        <td>${{ product.price }}</td>
-        {% endfor %}
-      </tr>
+              <div class="card-body">
+                {% if product.category %}
+                  <span class="badge bg-dark mb-2">{{ product.category.name }}</span>
+                {% endif %}
 
-      <tr>
-        <th>Seller</th>
-        {% for product in products %}
-        <td>{{ product.seller.username }}</td>
-        {% endfor %}
-      </tr>
+                <h5 class="card-title mb-1">{{ product.name }}</h5>
+                <p class="text-muted mb-2">{{ product.seller.username }}</p>
 
-      <tr>
-        <th>Category</th>
-        {% for product in products %}
-        <td>
-          {% if product.category %}
-            {{ product.category.name }}
-          {% else %}
-            None
-          {% endif %}
-        </td>
-        {% endfor %}
-      </tr>
+                <div class="mb-2">
+                  <p class="mb-1"><strong>Price:</strong> ${{ product.price }}</p>
+                  <p class="mb-1"><strong>Stock:</strong>
+                    {% if product.stock == 0 %}
+                      <span class="text-danger">Out of stock</span>
+                    {% else %}
+                      {{ product.stock }} left
+                    {% endif %}
+                  </p>
+                  <p class="mb-0"><strong>Description:</strong> {{ product.description|truncatechars:120 }}</p>
+                </div>
+              </div>
+            </a>
 
-      <tr>
-        <th>Description</th>
-        {% for product in products %}
-        <td>{{ product.description }}</td>
-        {% endfor %}
-      </tr>
-    </table>
-  </div>
+            <div class="card-footer bg-white border-0 pt-0">
+              <div class="d-grid gap-2">
+                <a href="{% url 'prod_details' product.pk %}" class="btn btn-danger">View Item</a>
+
+                {% if request.user.is_authenticated and request.user.role == "buyer" %}
+                  <form method="post" action="{% url 'cart:add_to_cart' product.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="quantity" value="1">
+                    <button class="btn btn-outline-primary w-100" type="submit">Add to Cart</button>
+                  </form>
+                {% elif not request.user.is_authenticated %}
+                  <a href="{% url 'login' %}" class="btn btn-outline-primary">Login to Add to Cart</a>
+                {% else %}
+                  <button class="btn btn-secondary w-100" disabled>
+                    Cart enabled for buyers only
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
   {% else %}
-  <div class="alert alert-info text-center">No products selected to compare.</div>
-  <div class="text-center">
-    <a href="/api/catalog/" class="btn btn-primary">Return to Catalog</a>
-  </div>
+    <div class="text-center text-muted py-5">
+      <h4>No products selected for comparison.</h4>
+      <p>Please go back and choose at least one item.</p>
+    </div>
   {% endif %}
+
+  <div class="mt-4 d-flex gap-2">
+    <a href="{% url 'catalog' %}" class="btn btn-outline-dark">← Back to Catalog</a>
+    {% if request.user.is_authenticated %}
+      <a href="{% url 'account' %}" class="btn btn-outline-secondary">Go to Account</a>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

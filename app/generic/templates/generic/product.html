@@ -1,11 +1,12 @@
 {% extends "generic/base.html" %}
 <!-- couldnt keep hardcoded html page but still tried to keep the similar structure! -->
-{% load static %}
+{% load static tz %}
+
 {% block title %}{{ product.name }}{% endblock %}
 
 {% block nav_right %}
   {% if request.user.is_authenticated %}
-    <!-- Account -->
+ 
     <a href="{% url 'account' %}" class="text-white text-decoration-none">
       <i class="fa fa-user"></i>
     </a>
@@ -28,13 +29,17 @@
 
 <div class="container my-4">
   <div class="row g-4">
-    <div class="col-md-6">
+
+       <div class="col-md-6">
       <section id="product-info" class="bg-white p-4 rounded shadow-sm h-100 text-center">
         {% if product.photo %}
           <img src="{{ product.photo.url }}" alt="{{ product.name }}" class="img-fluid rounded mb-3" style="max-height: 400px; object-fit: cover;">
         {% else %}
-          <div class="photoPlaceholder mb-3 d-flex align-items-center justify-content-center" style="min-height:300px;">Photo</div>
+          <div class="photoPlaceholder mb-3 d-flex align-items-center justify-content-center" style="min-height:300px;">
+            Photo
+          </div>
         {% endif %}
+
         <h2>{{ product.name }}</h2>
         <p>Artist / Brand: {{ product.seller.username }}</p>
         <p>Price: ${{ product.price }}</p>
@@ -42,6 +47,7 @@
       </section>
     </div>
 
+   
     <div class="col-md-6">
       <section id="product-actions" class="bg-white p-4 rounded shadow-sm h-100">
         {% if request.user.is_authenticated and request.user.role == "buyer" %}
@@ -51,11 +57,14 @@
             <button class="btn btn-outline-primary w-100" type="submit">Add to Cart</button>
           </form>
         {% elif not request.user.is_authenticated %}
-          <a href="{% url 'login' %}" class="btn btn-outline-primary w-100">Login to Add to Cart</a>
+          <a href="{% url 'login' %}" class="btn btn-outline-primary w-100">
+            Login to Add to Cart
+          </a>
         {% endif %}
       </section>
     </div>
 
+   
     <div class="col-12">
       <section id="product-description" class="bg-white p-4 rounded shadow-sm">
         <h2>Product Description</h2>
@@ -63,6 +72,7 @@
       </section>
     </div>
 
+   
     <div class="col-12">
       <section id="seller-info" class="bg-white p-4 rounded shadow-sm">
         <h2>Seller Information</h2>
@@ -70,6 +80,103 @@
         <p>Category: {% if product.category %}{{ product.category.name }}{% else %}None{% endif %}</p>
       </section>
     </div>
+
+    
+    <div class="col-12">
+      <section id="product-reviews" class="bg-white p-4 rounded shadow-sm">
+        <h2>Customer Reviews</h2>
+
+        {% if average_rating %}
+          <p><strong>Average Rating:</strong> {{ average_rating|floatformat:1 }}/5</p>
+        {% else %}
+          <p>No reviews yet.</p>
+        {% endif %}
+
+        {% if can_review %}
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5 class="card-title">
+                {% if user_review %}Update Your Review{% else %}Leave a Review{% endif %}
+              </h5>
+
+              <form method="post" action="{% url 'submit_review' product.id %}">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                  <label for="rating" class="form-label">Rating</label>
+                  <select name="rating" id="rating" class="form-select" required>
+                    <option value="">Select a rating</option>
+                    <option value="5" {% if user_review and user_review.rating == 5 %}selected{% endif %}>5 - Excellent</option>
+                    <option value="4" {% if user_review and user_review.rating == 4 %}selected{% endif %}>4 - Very Good</option>
+                    <option value="3" {% if user_review and user_review.rating == 3 %}selected{% endif %}>3 - Good</option>
+                    <option value="2" {% if user_review and user_review.rating == 2 %}selected{% endif %}>2 - Fair</option>
+                    <option value="1" {% if user_review and user_review.rating == 1 %}selected{% endif %}>1 - Poor</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="comment" class="form-label">Comment</label>
+                  <textarea
+                    name="comment"
+                    id="comment"
+                    rows="4"
+                    class="form-control"
+                    placeholder="Share your thoughts about this product..."
+                  >{% if user_review %}{{ user_review.comment }}{% endif %}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                  {% if user_review %}Update Review{% else %}Submit Review{% endif %}
+                </button>
+              </form>
+            </div>
+          </div>
+        {% elif request.user.is_authenticated and request.user.role == "buyer" %}
+          <p class="text-muted">You can review this product after purchasing it.</p>
+        {% endif %}
+
+        
+        {% for review in reviews %}
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h6 class="mb-1">{{ review.buyer.username }}</h6>
+                  <p class="mb-1"><strong>Rating:</strong> {{ review.rating }}/5</p>
+
+                  {% if review.is_hidden %}
+                    <p class="text-danger mb-1"><strong>Hidden by admin</strong></p>
+                  {% endif %}
+
+                  {% if review.comment %}
+                    <p class="mb-1">{{ review.comment }}</p>
+                  {% endif %}
+
+                  <small class="text-muted">
+                    {{ review.created_at|localtime|date:"M d, Y g:i A" }}
+                  </small>
+                </div>
+
+                {% if request.user.is_authenticated and request.user.role == "admin" %}
+                  {% if review.is_hidden %}
+                    <a href="{% url 'unhide_review' review.id %}" class="btn btn-sm btn-outline-success">
+                      Unhide
+                    </a>
+                  {% else %}
+                    <a href="{% url 'hide_review' review.id %}" class="btn btn-sm btn-outline-danger">
+                      Hide
+                    </a>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <p class="text-muted">No customer reviews yet.</p>
+        {% endfor %}
+      </section>
+    </div>
+
   </div>
 </div>
 {% endblock %}

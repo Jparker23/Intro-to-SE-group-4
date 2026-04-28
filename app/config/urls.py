@@ -18,9 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.shortcuts import redirect
+from django.views.static import serve
+from django.urls import re_path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 
 urlpatterns = [
+    path("", lambda request: redirect("home")),
     path('admin/', admin.site.urls),
     path('api/', include('shop.urls')),
     path("api/auth/", include("accounts.urls")),
@@ -33,5 +37,15 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
 ]
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+#this is to cover error pages from users, just so users dont see ugly error pages
+handler404 = "config.views.custom_404"
+handler403 = "config.views.custom_403"
+handler500 = "config.views.custom_500"
+
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += [
+    re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+]
+

@@ -22,7 +22,7 @@
 <!-- Listings Grid -->
 <div class="row g-3">
   {% for product in products %}
-  <div class="col-md-3 col-sm-6">
+ <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
     <div class="card h-100">
       {% if product.photo %}
         <img src="{{ product.photo.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 220px; object-fit: cover;">

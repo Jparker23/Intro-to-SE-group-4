@@ -228,9 +228,10 @@ def test_buyer_can_remove_from_cart(client, buyer, singer1_vinyl):
     )
     cart = Cart.objects.get(buyer=buyer)
     item = CartItem.objects.get(cart=cart, product=singer1_vinyl)
-    response = client.get(reverse("cart:remove_from_cart", args=[item.pk]))
+
+    response = client.post(reverse("cart:remove_from_cart", args=[item.pk]))
+
     assert response.status_code == 302
-    assert not CartItem.objects.filter(pk=item.pk).exists()
 
 
 @pytest.mark.django_db

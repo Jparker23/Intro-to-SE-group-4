@@ -1,13 +1,45 @@
 {% extends "generic/base.html" %}
 {% block title %}Returns{% endblock %}
+
 {% block content %}
 <div class="container my-4">
   <h2>Returns</h2>
-  <p>Return requests and statuses </p>
-  <div class="card p-3 mb-3">Return requests list</div>
+  <p>Return requests and statuses</p>
+
+  {% if returns %}
+    {% for ret in returns %}
+      <div class="card p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+          <div>
+            <h5 class="mb-1">{{ ret.order_item.product.name }}</h5>
+            <p class="mb-1 text-muted">
+              Requested on {{ ret.created_at|date:"M d, Y" }}
+            </p>
+            <p class="mb-1">
+              <strong>Reason:</strong> {{ ret.reason }}
+            </p>
+            <p class="mb-0">
+              <strong>Refund Amount:</strong> ${{ ret.refund_amount|floatformat:2 }}
+            </p>
+          </div>
+
+          <div class="text-end">
+            <p class="mb-0">
+              <strong>Status:</strong> {{ ret.status }}
+            </p>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="card p-3 mb-3">
+      <p class="mb-0">You have not submitted any return requests.</p>
+    </div>
+  {% endif %}
+
   <div class="d-flex gap-2">
     <a class="btn btn-outline-secondary" href="{% url 'account' %}">Back to account</a>
-    <a class="btn btn-primary" href="{% url 'returnReq' %}">Request a return</a>
+    <a class="btn btn-outline-primary" href="{% url 'orders' %}">Go to orders</a>
   </div>
 </div>
 {% endblock %}

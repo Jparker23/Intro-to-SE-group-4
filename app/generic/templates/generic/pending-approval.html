@@ -1,0 +1,25 @@
+{% extends "generic/base.html" %}
+{% load static %}
+
+{% block title %}Pending Approval{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4 text-center">
+          <h2 class="mb-3">Account Pending Approval</h2>
+          <p class="text-muted mb-3">
+            Hello! Your account was created successfully, but it still needs to be approved by an administrator before you can log in.
+          </p>
+          <p class="text-muted mb-4">
+            You will receive an email once your account has been approved.
+          </p>
+          <a href="{% url 'login' %}" class="btn btn-outline-primary">Back to Login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

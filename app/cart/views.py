@@ -3,28 +3,53 @@ from decimal import Decimal
 from django.views.decorators.http import require_POST
 from shop.models import Product, Cart, CartItem
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
+from shop.utils import create_audit_log
+from functools import wraps
+
+def buyer_required(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if request.user.role != "buyer":
+            create_audit_log( request, action="FORBIDDEN_BUYER_ROUTE_ACCESS", details=f"Non-buyer tried to access buyer-only view {view_func.__name__}", )
+            return redirect("home")
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 
-
+@never_cache
 @login_required
+@buyer_required
 def cart_details(request):
-    #should fetch a list of products in the cart from the DB and render a template to display them
-    cart, _  = Cart.objects.get_or_create(buyer=request.user)
+    cart, _ = Cart.objects.get_or_create(buyer=request.user)
     cart_items = CartItem.objects.filter(cart=cart).select_related("product")
     subtotal = sum(item.product.price * item.quantity for item in cart_items)
     item_count = sum(item.quantity for item in cart_items)
-    tax = subtotal * Decimal("0.07") if subtotal else Decimal("0.00")
-    total = subtotal + tax 
-    #each prod should have a add to cart button
-    return render(request, "generic/cart.html", {"cart_items": cart_items, "item_count": item_count,"subtotal": subtotal,"tax": tax, "total": total,})
+    tax = subtotal * Decimal("0.10") if subtotal else Decimal("0.00")
+    total = subtotal + tax
 
+    return render(
+        request,
+        "generic/cart.html",
+        {
+            "cart_items": cart_items,
+            "item_count": item_count,
+            "subtotal": subtotal,
+            "tax": tax,
+            "total": total,
+        },
+    )
+
+
+@never_cache
 @login_required
+@buyer_required
 @require_POST
-def add_to_cart(request, product_id): #when user clicks add to cart, this is triggered
-    product = get_object_or_404(Product, id=product_id, is_approved=True) #make sure only approved prods can go to the cart
+def add_to_cart(request, product_id):
+    product = get_object_or_404(Product, id=product_id, is_approved=True)
     cart, _ = Cart.objects.get_or_create(buyer=request.user)
-    #add 1 quantity
-    quantity = int(request.POST.get('quantity', 1))
+
+    quantity = int(request.POST.get("quantity", 1))
     item, created = CartItem.objects.get_or_create(cart=cart, product=product)
 
     if created:
@@ -33,17 +58,28 @@ def add_to_cart(request, product_id): #when user clicks add to cart, this is tri
         item.quantity = min(item.quantity + quantity, product.stock)
 
     item.save()
-    return redirect(request.META.get("HTTP_REFERER", "/api/catalog/")) #sends user back to the page that they came from
 
+    create_audit_log(request, action="ADD_TO_CART", details=f"Added/updated {product.name} to cart with quantity={item.quantity}", target_type="Product", target_id=product.pk, )
+
+    return redirect(request.META.get("HTTP_REFERER", "/api/catalog/"))
+
+
+@never_cache
 @login_required
-def remove_from_cart(request, item_id): #removing a item from cart
+@buyer_required
+@require_POST
+def remove_from_cart(request, item_id):
     cart, _ = Cart.objects.get_or_create(buyer=request.user)
-    item = get_object_or_404(CartItem, id=item_id, cart__buyer=request.user)
+    item = get_object_or_404(CartItem, id=item_id, cart=cart)
+
+    create_audit_log(request, action="REMOVE_FROM_CART", details=f"Removed {item.product.name} from cart", target_type="Product", target_id=item.product.pk, )
+
     item.delete()
-    return redirect("cart:cart_details") #directs user back to cart to view updated cart
+    return redirect("cart:cart_details")
 
-
+@never_cache
 @login_required
+@buyer_required
 @require_POST
 def update_cart_item(request, product_id):
     cart, _ = Cart.objects.get_or_create(buyer=request.user)
@@ -52,9 +88,12 @@ def update_cart_item(request, product_id):
     quantity = int(request.POST.get("quantity", 1))
 
     if quantity <= 0:
+        create_audit_log( request, action="REMOVE_FROM_CART_VIA_UPDATE", details=f"Removed {item.product.name} from cart by setting quantity <= 0", target_type="Product", target_id=item.product.pk, )
         item.delete()
     else:
         item.quantity = min(quantity, item.product.stock)
         item.save()
+
+        create_audit_log(request, action="UPDATE_CART_ITEM", details=f"Updated {item.product.name} quantity to {item.quantity}", target_type="Product", target_id=item.product.pk, )
 
     return redirect("cart:cart_details")

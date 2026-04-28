@@ -3,16 +3,373 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Amplify{% endblock %}</title>
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-	<!-- Font Awesome Icons to use -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  <style>
+    
+    body.theme-light {
+      background-color: #f8f9fa;
+      color: #212529;
+    }
+    
+    body.theme-dark {
+      background-color: #181a1b;
+      color: #e4e6eb;
+    }
+    
+    body.theme-high {
+      background-color: #000;
+      color: #fff;
+    }
+    
+    body.theme-invert {
+      filter: invert(1) hue-rotate(180deg);
+    }
+    
+    
+    body.text-normal { font-size: 1rem; }
+    body.text-large { font-size: 1.1rem; }
+    body.text-xlarge { font-size: 1.25rem; }
+    
+  
+    #accessibility-fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      background-color: #046582;
+      color: white;
+      border: none;
+      font-size: 22px;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    
+    #accessibility-fab:hover {
+      background-color: #03506f;
+    }
+    
+   
+    body.theme-dark,
+    body.theme-dark html {
+      background-color: #181a1b !important;
+      color: #e4e6eb !important;
+    }
+    
+    body.theme-dark h1,
+    body.theme-dark h2,
+    body.theme-dark h3,
+    body.theme-dark h4,
+    body.theme-dark h5,
+    body.theme-dark h6,
+    body.theme-dark .title,
+    body.theme-dark .prodPage,
+    body.theme-dark .sidebarHdr {
+      color: #f1f3f4 !important;
+    }
+    
+    body.theme-dark p,
+    body.theme-dark span,
+    body.theme-dark label,
+    body.theme-dark li,
+    body.theme-dark small,
+    body.theme-dark .productDesc {
+      color: #d0d3d7 !important;
+    }
+    
+    body.theme-dark a {
+      color: #8ab4f8 !important;
+    }
+    
+    
+    body.theme-dark .navbar {
+      background-color: #242526 !important;
+    }
+    
+   
+    body.theme-dark .card,
+    body.theme-dark .productCard,
+    body.theme-dark .bg-white,
+    body.theme-dark section.bg-white,
+    body.theme-dark .shadow-sm,
+    body.theme-dark .modal-content {
+      background-color: #242526 !important;
+      color: #e4e6eb !important;
+      border: 1px solid #3a3b3c !important;
+    }
+    
+    
+    body.theme-dark .card-body,
+    body.theme-dark .card-footer {
+      background-color: #2a2b2d !important;
+      color: #e4e6eb !important;
+      border-color: #3a3b3c !important;
+    }
+    
+  
+    body.theme-dark .productName,
+    body.theme-dark .productPrice {
+      color: #8ab4f8 !important;
+    }
+    
+    body.theme-dark .productDesc {
+      color: #d0d3d7 !important;
+    }
+    
+  
+    body.theme-dark .sidenav {
+      background-color: #1f3a46 !important;
+    }
+    
+    body.theme-dark .sidenav a {
+      color: #f1f3f4 !important;
+    }
+    
+    body.theme-dark .sidenav a:hover {
+      background-color: rgba(255, 255, 255, 0.08) !important;
+      color: #9fd7eb !important;
+    }
+    
+    body.theme-dark .closeBtn {
+      background-color: #3a3b3c !important;
+      color: #f1f3f4 !important;
+    }
+    
 
+    body.theme-dark .bar1,
+    body.theme-dark .bar2,
+    body.theme-dark .bar3 {
+      background-color: #9fd7eb !important;
+    }
+    
+  
+    body.theme-dark .LoginContainer {
+      background-color: #2f6f8f !important;
+      color: #f5f5f5 !important;
+    }
+    
+    body.theme-dark .LoginContainer:hover {
+      background-color: #3f87ab !important;
+      color: #ffffff !important;
+    }
+    
+    body.theme-dark .iconBtn {
+      color: #8ab4f8 !important;
+    }
+    
+    body.theme-dark .iconBtn:hover {
+      color: #9fd7eb !important;
+    }
+    
+ 
+    body.theme-dark input,
+    body.theme-dark select,
+    body.theme-dark textarea,
+    body.theme-dark .form-control,
+    body.theme-dark .form-select {
+      background-color: #3a3b3c !important;
+      color: #e4e6eb !important;
+      border: 1px solid #555 !important;
+    }
+    
+    body.theme-dark input::placeholder,
+    body.theme-dark textarea::placeholder {
+      color: #b0b3b8 !important;
+    }
+    
+
+    body.theme-dark .searchIcon {
+      background-color: #3a3b3c !important;
+      color: #8ab4f8 !important;
+      border-color: #555 !important;
+    }
+    
+    body.theme-dark .searchIcon:hover {
+      background-color: #4a4b4d !important;
+      color: #9fd7eb !important;
+    }
+    
+
+    body.theme-dark .btn {
+      background-color: #3a3b3c;
+      color: #e4e6eb;
+      border: 1px solid #555;
+    }
+    
+    body.theme-dark .btn:hover {
+      background-color: #4a4b4d;
+      color: #fff;
+    }
+    
+    body.theme-dark .catalogButton {
+      background-color: transparent !important;
+      color: #8ab4f8 !important;
+      border: 1px solid #8ab4f8 !important;
+    }
+    
+    body.theme-dark .catalogButton:hover {
+      background-color: #2f6f8f !important;
+      color: #ffffff !important;
+      border-color: #2f6f8f !important;
+    }
+    
+    
+    body.theme-dark .brandHdrContainer {
+      background-color: #2f4757 !important;
+    }
+    
+    body.theme-dark .brandbar .logo,
+    body.theme-dark .brandbar a {
+      color: #f1f3f4 !important;
+    }
+    
+    body.theme-dark .brandbar a:hover {
+      background-color: #3a3b3c !important;
+      color: #9fd7eb !important;
+    }
+    
+    /* photo placeholder */
+    body.theme-dark .photoPlaceholder {
+      background-color: #2f4757 !important;
+      color: #9fd7eb !important;
+    }
+    
+   
+    body.theme-dark .list-group-item {
+      background-color: #242526 !important;
+      color: #e4e6eb !important;
+      border-color: #3a3b3c !important;
+    }
+    
+  
+    body.theme-dark .modal-content {
+      background-color: #242526 !important;
+      color: #e4e6eb !important;
+    }
+    
+    body.theme-dark .modal-header,
+    body.theme-dark .modal-footer {
+      border-color: #3a3b3c !important;
+    }
+    
+    body.theme-dark .btn-close {
+      filter: invert(1);
+    }
+    
+    
+    body.theme-dark .alert {
+      background-color: #3a3b3c !important;
+      color: #f5f5f5 !important;
+      border: 1px solid #555 !important;
+    }
+    
+    
+    body.theme-dark #accessibility-fab {
+      background-color: #2f6f8f !important;
+      color: #fff !important;
+    }
+    
+  
+    body.theme-high,
+    body.theme-high html {
+      background-color: #000 !important;
+      color: #fff !important;
+    }
+    
+    body.theme-high * {
+      box-shadow: none !important;
+    }
+    
+    body.theme-high h1,
+    body.theme-high h2,
+    body.theme-high h3,
+    body.theme-high h4,
+    body.theme-high h5,
+    body.theme-high h6,
+    body.theme-high .title,
+    body.theme-high .prodPage,
+    body.theme-high .sidebarHdr,
+    body.theme-high p,
+    body.theme-high span,
+    body.theme-high label,
+    body.theme-high li,
+    body.theme-high small {
+      color: #fff !important;
+    }
+    
+    body.theme-high a {
+      color: #00ffff !important;
+      text-decoration: underline;
+    }
+    
+    body.theme-high .navbar,
+    body.theme-high .card,
+    body.theme-high .productCard,
+    body.theme-high .bg-white,
+    body.theme-high section.bg-white,
+    body.theme-high .shadow-sm,
+    body.theme-high .modal-content,
+    body.theme-high .sidenav,
+    body.theme-high .brandHdrContainer,
+    body.theme-high .list-group-item {
+      background-color: #000 !important;
+      color: #fff !important;
+      border: 2px solid #fff !important;
+    }
+    
+    body.theme-high .btn,
+    body.theme-high .catalogButton,
+    body.theme-high .LoginContainer,
+    body.theme-high .closeBtn {
+      background-color: #fff !important;
+      color: #000 !important;
+      border: 2px solid #fff !important;
+    }
+    
+    body.theme-high input,
+    body.theme-high select,
+    body.theme-high textarea,
+    body.theme-high .form-control,
+    body.theme-high .form-select,
+    body.theme-high .searchIcon {
+      background-color: #000 !important;
+      color: #fff !important;
+      border: 2px solid #fff !important;
+    }
+    
+    body.theme-high .bar1,
+    body.theme-high .bar2,
+    body.theme-high .bar3 {
+      background-color: #fff !important;
+    }
+    
+    body.theme-high .productName,
+    body.theme-high .productPrice,
+    body.theme-high .productDesc,
+    body.theme-high .brandbar .logo,
+    body.theme-high .brandbar a {
+      color: #fff !important;
+    }
+    
+    body.theme-high #accessibility-fab {
+      background-color: #fff !important;
+      color: #000 !important;
+      border: 2px solid #fff !important;
+    }
+  </style>
 </head>
-	
-<body class="bg-light">
+
+<body class="theme-light text-normal">
+  
   <nav class="navbar navbar-dark bg-dark px-4">
     <a class="navbar-brand" href="{% url 'home' %}">Amplify</a>
     <div class="d-flex gap-3">
@@ -20,34 +377,96 @@
     </div>
   </nav>
   
-    {% if messages %}
-    <div class="container pt-3">
-      {% for message in messages %}
-        <div class="alert alert-danger">{{ message }}</div>
-      {% endfor %}
-    </div>
-    {% endif %}
-    
-    {% block body %} 
+  {% if messages %}
+  <div class="container pt-3">
+    {% for message in messages %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  
+  {% block body %} 
   <div class="container py-5">
     {% block content %}{% endblock %}
- </div>
-   {% endblock %}
+  </div>
+  {% endblock %}
   
-<script>
-function cartLoginAlert() {
-    alert("Please login to access the cart.");
-    window.location.href = "/api/auth/login/";
-}
-</script>
+  <button id="accessibility-fab" data-bs-toggle="modal" data-bs-target="#accessModal" title="Accessibility Settings">
+    <i class="fa fa-universal-access"></i>
+  </button>
+  
+  <div class="modal fade" id="accessModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        
+        <div class="modal-header">
+          <h5 class="modal-title">Accessibility Settings</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        
+        <div class="modal-body">
+          <label class="form-label">Theme</label>
+          <select id="themeSelect" class="form-select mb-3">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="high">High Contrast</option>
+            <option value="invert">Invert Colors</option>
+          </select>
+          
+          <label class="form-label">Text Size</label>
+          <select id="textSizeSelect" class="form-select">
+            <option value="normal">Normal</option>
+            <option value="large">Large</option>
+            <option value="xlarge">Extra Large</option>
+          </select>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    const body = document.body;
+    const themeSelect = document.getElementById("themeSelect");
+    const textSelect = document.getElementById("textSizeSelect");
+    
+    function applySettings(theme, text) {
+      body.classList.remove("theme-light", "theme-dark", "theme-high", "theme-invert");
+      body.classList.remove("text-normal", "text-large", "text-xlarge");
+      
+      body.classList.add("theme-" + theme);
+      body.classList.add("text-" + text);
+    }
+    
+    const savedTheme = localStorage.getItem("theme") || "light";
+    const savedText = localStorage.getItem("textSize") || "normal";
+    
+    applySettings(savedTheme, savedText);
+    
+    themeSelect.value = savedTheme;
+    textSelect.value = savedText;
+    
+    themeSelect.addEventListener("change", () => {
+      const theme = themeSelect.value;
+      const text = textSelect.value;
+      applySettings(theme, text);
+      localStorage.setItem("theme", theme);
+    });
+    
+    textSelect.addEventListener("change", () => {
+      const theme = themeSelect.value;
+      const text = textSelect.value;
+      applySettings(theme, text);
+      localStorage.setItem("textSize", text);
+    });
+    
+    function cartLoginAlert() {
+      alert("Please login to access the cart.");
+      window.location.href = "/api/auth/login/";
+    }
+  </script>
   
 </body>
 </html>
-
-
-
-
-	
-	
-
-

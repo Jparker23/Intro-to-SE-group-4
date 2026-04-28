@@ -1,57 +1,110 @@
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
   overflow-x: hidden;
+  background-color: transparent;
 }
 
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* page titles */
+.title {
+  font-size: 3rem;
+  color: #111827;
+}
+
+.prodPage {
+  color: #111827;
+  font-weight: 700;
+}
+
+/* top right account/login area */
 .topRight {
   position: absolute;
-  right: 20px;
+  top: 18px;
+  right: 24px;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  z-index: 5;
 }
 
 .LoginContainer {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 8px;
+  padding: 8px 14px;
   background-color: #9fd7eb;
   color: #046582;
-  border-radius: 4px;
-  cursor: pointer;
+  border-radius: 6px;
+  text-decoration: none;
   transition: 0.3s;
+  white-space: nowrap;
 }
 
 .LoginContainer:hover {
   background-color: #f4f3eb;
+  color: #046582;
 }
 
+/* search */
+.search {
+  width: 100%;
+}
+
+.search .form-control {
+  min-width: 0;
+  height: 56px;
+  border-radius: 8px 0 0 8px;
+  font-size: 1rem;
+}
+
+.searchIcon {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-left: 0;
+  color: #046582;
+  padding-left: 18px;
+  padding-right: 18px;
+  border-radius: 0 8px 8px 0;
+}
+
+.searchIcon:hover {
+  background-color: #f4f3eb;
+  color: #046582;
+}
+
+/* seller tabs */
 .tabHdrContainer {
   width: 100%;
   background-color: #046582;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 6px 0;
-  margin-top: 30px;
+  margin-top: 24px;
 }
 
 .tabbar {
-  display: inline-flex;
+  display: flex;
   justify-content: center;
-  gap: 15px;
+  gap: 12px;
   padding: 10px 15px;
-  min-width: 100%;
+  min-width: max-content;
+  white-space: nowrap;
 }
 
 .tabbar a {
   text-decoration: none;
   color: #f4f3eb;
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: 8px 14px;
+  border-radius: 6px;
   white-space: nowrap;
   transition: 0.3s;
 }
@@ -75,5 +128,212 @@ body {
 .dashTab.active {
   background-color: #f4f3eb;
   color: #046582;
-  font-weight: bold;
+  font-weight: 700;
+}
+
+/* tables and cards */
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.card {
+  border-radius: 10px;
+}
+
+.badge {
+  white-space: nowrap;
+}
+
+/* seller page helpers */
+.seller-page .btn {
+  white-space: nowrap;
+}
+
+/* tablet */
+@media (max-width: 991.98px) {
+  .title {
+    font-size: 2.3rem;
+    text-align: center;
+  }
+  
+  .prodPage {
+    font-size: 1.6rem;
+  }
+  
+  .container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* phone */
+@media (max-width: 767.98px) {
+  .title {
+    font-size: 2rem;
+    margin-top: 8px;
+  }
+  
+  .topRight {
+    position: static;
+    justify-content: center;
+    width: 100%;
+    margin-top: 14px;
+    margin-bottom: 12px;
+  }
+  
+  .LoginContainer {
+    padding: 8px 12px;
+    font-size: 0.95rem;
+  }
+  
+  .tabHdrContainer {
+    margin-top: 14px;
+  }
+  
+  .tabbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    min-width: 100%;
+  }
+  
+  .dashTab {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .search .form-control {
+    height: 50px;
+    font-size: 1rem;
+  }
+  
+  .searchIcon {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  
+  .table-responsive {
+    border: 0;
+  }
+  
+  .card-body,
+  .card-footer {
+    padding: 1rem !important;
+  }
+  
+  .btn {
+    font-size: 0.95rem;
+  }
+  /* let global theme control the page background */
+  html,
+  body {
+    background-color: transparent;
+  }
+  
+  /* DARK MODE support for seller pages */
+  body.theme-dark .title,
+  body.theme-dark .prodPage {
+    color: #f1f3f4 !important;
+  }
+  
+  body.theme-dark .topRight {
+    color: #e4e6eb;
+  }
+  
+  body.theme-dark .LoginContainer {
+    background-color: #2f6f8f !important;
+    color: #f5f5f5 !important;
+  }
+  
+  body.theme-dark .LoginContainer:hover {
+    background-color: #3f87ab !important;
+    color: #ffffff !important;
+  }
+  
+  body.theme-dark .search .form-control,
+  body.theme-dark .searchIcon {
+    background-color: #3a3b3c !important;
+    color: #e4e6eb !important;
+    border-color: #555 !important;
+  }
+  
+  body.theme-dark .searchIcon:hover {
+    background-color: #4a4b4d !important;
+    color: #9fd7eb !important;
+  }
+  
+  body.theme-dark .tabHdrContainer {
+    background-color: #2f4757 !important;
+  }
+  
+  body.theme-dark .tabbar a,
+  body.theme-dark .dashTab {
+    color: #f1f3f4 !important;
+  }
+  
+  body.theme-dark .tabbar a:hover,
+  body.theme-dark .dashTab:hover,
+  body.theme-dark .dashTab.active {
+    background-color: #3a3b3c !important;
+    color: #9fd7eb !important;
+  }
+  
+  body.theme-dark .table,
+  body.theme-dark .table td,
+  body.theme-dark .table th {
+    color: #e4e6eb !important;
+    border-color: #3a3b3c !important;
+  }
+  
+  body.theme-dark .card {
+    background-color: #242526 !important;
+    color: #e4e6eb !important;
+    border: 1px solid #3a3b3c !important;
+  }
+  
+  body.theme-dark .card-body,
+  body.theme-dark .card-footer {
+    background-color: #2a2b2d !important;
+    color: #e4e6eb !important;
+  }
+  
+  body.theme-dark .badge {
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  
+  /* HIGH CONTRAST support for seller pages */
+  body.theme-high .title,
+  body.theme-high .prodPage,
+  body.theme-high .tabbar a,
+  body.theme-high .dashTab,
+  body.theme-high .table,
+  body.theme-high .table td,
+  body.theme-high .table th,
+  body.theme-high .card,
+  body.theme-high .card-body,
+  body.theme-high .card-footer,
+  body.theme-high .badge {
+    color: #fff !important;
+  }
+  
+  body.theme-high .LoginContainer,
+  body.theme-high .search .form-control,
+  body.theme-high .searchIcon,
+  body.theme-high .card,
+  body.theme-high .card-body,
+  body.theme-high .card-footer,
+  body.theme-high .tabHdrContainer {
+    background-color: #000 !important;
+    color: #fff !important;
+    border: 2px solid #fff !important;
+  }
+  
+  body.theme-high .tabbar a:hover,
+  body.theme-high .dashTab:hover,
+  body.theme-high .dashTab.active {
+    background-color: #fff !important;
+    color: #000 !important;
+  }
 }

@@ -5,7 +5,7 @@ from django.core.files import File
 from django.utils import timezone
 import random
 
-from shop.models import Product, Review, Category, Order, OrderItem, Payment, Address, ShippingOption
+from shop.models import Product, Review, Category, Order, OrderItem, Payment, Address, ShippingOption, Payout
 from accounts.models import User
 
 
@@ -16,12 +16,14 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING("Clearing old demo data..."))
 
         Review.objects.all().delete()
+        Payout.objects.all().delete()
         OrderItem.objects.all().delete()
         Payment.objects.all().delete()
         Order.objects.all().delete()
         Address.objects.all().delete()
         Product.objects.all().delete()
         Category.objects.all().delete()
+        ShippingOption.objects.all().delete()
 
         User.objects.filter(username__in=[
             "admin1",
@@ -122,8 +124,6 @@ class Command(BaseCommand):
        
         self.stdout.write(self.style.SUCCESS("Creating shipping options..."))
 
-        ShippingOption.objects.all().delete()
-
         ShippingOption.objects.create(
             name="Standard Shipping",
             code="standard",
@@ -180,6 +180,9 @@ class Command(BaseCommand):
             is_active=True,
             is_approved=True,
             approval_status="Approved",
+            orbit_int=True,
+            redirect_int=None,
+            deleted_at=None,
         )
 
         product_data = [
@@ -341,19 +344,28 @@ class Command(BaseCommand):
             )
 
             for p in chosen_products:
-                OrderItem.objects.create(
+                quantity = random.randint(1, 2)
+                order_item = OrderItem.objects.create(
                     order=order,
                     product=p,
                     seller=p.seller,
                     status="Delivered",
-                    quantity=random.randint(1, 2),
+                    quantity=quantity,
                     price_at_purchase=p.price,
                 )
-
+                
+                Payout.objects.create(
+                    seller=p.seller,
+                    order_item=order_item,
+                    amount=p.price * quantity,
+                    status="Paid",
+                    paid_at=timezone.now(),
+                )
+                
             Payment.objects.create(
                 user=buyer,
                 order=order,
-                payment_method="Card",
+                payment_method="CreditCard",
                 payment_status="Completed",
             )
 

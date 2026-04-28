@@ -149,89 +149,6 @@ img {
 .seller-page .btn {
   white-space: nowrap;
 }
-
-/* tablet */
-@media (max-width: 991.98px) {
-  .title {
-    font-size: 2.3rem;
-    text-align: center;
-  }
-  
-  .prodPage {
-    font-size: 1.6rem;
-  }
-  
-  .container {
-    padding-left: 14px;
-    padding-right: 14px;
-  }
-}
-
-/* phone */
-@media (max-width: 767.98px) {
-  .title {
-    font-size: 2rem;
-    margin-top: 8px;
-  }
-  
-  .topRight {
-    position: static;
-    justify-content: center;
-    width: 100%;
-    margin-top: 14px;
-    margin-bottom: 12px;
-  }
-  
-  .LoginContainer {
-    padding: 8px 12px;
-    font-size: 0.95rem;
-  }
-  
-  .tabHdrContainer {
-    margin-top: 14px;
-  }
-  
-  .tabbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-    min-width: 100%;
-  }
-  
-  .dashTab {
-    width: 100%;
-    text-align: center;
-  }
-  
-  .search .form-control {
-    height: 50px;
-    font-size: 1rem;
-  }
-  
-  .searchIcon {
-    padding-left: 14px;
-    padding-right: 14px;
-  }
-  
-  .table-responsive {
-    border: 0;
-  }
-  
-  .card-body,
-  .card-footer {
-    padding: 1rem !important;
-  }
-  
-  .btn {
-    font-size: 0.95rem;
-  }
-  /* let global theme control the page background */
-  html,
-  body {
-    background-color: transparent;
-  }
-  
   /* DARK MODE support for seller pages */
   body.theme-dark .title,
   body.theme-dark .prodPage {
@@ -336,4 +253,102 @@ img {
     background-color: #fff !important;
     color: #000 !important;
   }
+  body.theme-dark .table-dark,
+  body.theme-dark .table-dark th {
+    background-color: #1a1b1c !important;
+    color: #e4e6eb !important;
+    border-color: #3a3b3c !important;
+  }
+
+  body.theme-dark tbody tr {
+    background-color: #242526 !important;
+    color: #e4e6eb !important;
+  }
+
+  body.theme-dark tbody tr:hover {
+    background-color: #2f3031 !important;
+  }
+/* tablet */
+@media (max-width: 991.98px) {
+  .title {
+    font-size: 2.3rem;
+    text-align: center;
+  }
+  
+  .prodPage {
+    font-size: 1.6rem;
+  }
+  
+  .container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* phone */
+@media (max-width: 767.98px) {
+  .title {
+    font-size: 2rem;
+    margin-top: 8px;
+  }
+  
+  .topRight {
+    position: static;
+    justify-content: center;
+    width: 100%;
+    margin-top: 14px;
+    margin-bottom: 12px;
+  }
+  
+  .LoginContainer {
+    padding: 8px 12px;
+    font-size: 0.95rem;
+  }
+  
+  .tabHdrContainer {
+    margin-top: 14px;
+  }
+  
+  .tabbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    min-width: 100%;
+  }
+  
+  .dashTab {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .search .form-control {
+    height: 50px;
+    font-size: 1rem;
+  }
+  
+  .searchIcon {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  
+  .table-responsive {
+    border: 0;
+  }
+  
+  .card-body,
+  .card-footer {
+    padding: 1rem !important;
+  }
+  
+  .btn {
+    font-size: 0.95rem;
+  }
+  /* let global theme control the page background */
+  html,
+  body {
+    background-color: transparent;
+  }
+  
+
 }

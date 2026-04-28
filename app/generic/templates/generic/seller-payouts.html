@@ -21,6 +21,28 @@
       </a>
     {% endif %}
   </div>
+
+  <div class="container my-3">
+    <div class="d-flex justify-content-center">
+      <form method="get" action="{% url 'catalog' %}" style="max-width: 600px; width: 100%;">
+        <div class="input-group search">
+          <input class="form-control text-center" type="text" name="query" placeholder="Search">
+          <button class="btn searchIcon" type="submit">
+            <i class="fa fa-search"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="tabHdrContainer">
+    <div class="tabbar">
+      <a href="{% url 'sellerInventory' %}" class="btn dashTab {% if active_tab == 'inventory' %}active{% endif %}">Inventory</a>
+      <a href="{% url 'sellerOrders' %}" class="btn dashTab {% if active_tab == 'orders' %}active{% endif %}">Orders</a>
+      <a href="{% url 'sellerPayouts' %}" class="btn dashTab {% if active_tab == 'payouts' %}active{% endif %}">Payouts</a>
+      <a href="{% url 'seller_notifications' %}" class="btn dashTab {% if active_tab == 'notifications' %}active{% endif %}">Notifications</a>
+    </div>
+  </div>
 </header>
 
 <div class="container my-4">

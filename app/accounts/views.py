@@ -116,7 +116,7 @@ def register(request):
             user = cast(User, created_user)
 
             if user.role == "buyer":
-                user.is_approved = True
+                user.is_approved = False
                 user.save(update_fields=["is_approved"])
 
                 create_audit_log( request, action="REGISTER_BUYER_AUTO_APPROVED", details=f"Buyer account created for username={user.username}", target_type="User", target_id=user.pk, user=user,)

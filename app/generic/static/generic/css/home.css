@@ -216,8 +216,8 @@ img {
 }
 
 .brandbar {
-  display: inline-flex;
-  gap: 10px;
+  display: inline-flex;  
+  gap: 15px;
   padding: 10px 15px;
   min-width: max-content;
   align-items: center;
@@ -242,9 +242,21 @@ img {
   color: #046582;
 }
 
-/* buttons */
-.catalogButton {
-  background-color: transparent;
+.brandbar .logo {
+  color: #f4f3eb;
+  padding: 8px 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+
+.catalogContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: #9fd7eb;
   color: #046582;
   border: 1px solid #046582;
   white-space: nowrap;

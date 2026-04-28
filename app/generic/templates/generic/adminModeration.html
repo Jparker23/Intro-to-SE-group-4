@@ -144,6 +144,45 @@
   {% endif %}
 </div>
 
+<div class="mb-4">
+  <h4 class="mb-3">All Accounts</h4>
+
+  {% if all_users %}
+  <div class="row g-3">
+    {% for user in all_users %}
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="mb-1">{{ user.username }}</h5>
+          <p class="mb-1 text-muted">{{ user.email }}</p>
+          <p class="mb-3">
+            <strong>Role:</strong> {{ user.role }}
+            <strong>Status:</strong>
+            {% if user.is_approved %}
+              <span class="badge bg-success">Approved</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">Pending</span>
+            {% endif %}
+          </p>
+
+          <div class="d-flex flex-wrap gap-2">
+            {% if not user.is_approved %}
+              <a href="{% url 'approve_user' user.pk %}" class="btn btn-success btn-sm">Approve</a>
+            {% endif %}
+            <a href="{% url 'deny_user' user.pk %}" class="btn btn-danger btn-sm">Deny</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card p-3">
+    <p class="mb-0 text-muted">No accounts found.</p>
+  </div>
+  {% endif %}
+</div>
+
 <a class="btn btn-outline-secondary" href="{% url 'home' %}">Back to Home</a>
 </div>
 {% endblock %}

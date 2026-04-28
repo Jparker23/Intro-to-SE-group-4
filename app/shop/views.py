@@ -121,7 +121,8 @@ def adminModeration(request):
     pending_products = Product.objects.filter(approval_status="Pending").select_related("seller", "category")
     pending_returns = ReturnRequest.objects.filter(status="Pending").select_related("buyer", "order_item", "order_item__product", "order_item__seller", "order_item__order")
     pending_users = User.objects.filter(is_approved=False)
-    return render( request, "generic/adminModeration.html", {"pending_products": pending_products, "pending_returns": pending_returns, "pending_users": pending_users,},)
+    all_users = User.objects.exclude(pk=request.user.pk).order_by("role", "username")
+    return render( request, "generic/adminModeration.html", {"pending_products": pending_products, "pending_returns": pending_returns, "pending_users": pending_users, "all_users": all_users,},)
 
 def orderConf(request):
     return render(request, "generic/orderConf.html")

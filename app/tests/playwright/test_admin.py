@@ -3,8 +3,8 @@ from conftest import login, BASE_URL
 
 def test_admin_can_access_dashboard(page: Page):
     login(page, "admin1", "wriug-7qo$ab-9mqwoy")
-    page.goto(f"{BASE_URL}/api/account/")
-    expect(page.locator("body")).to_contain_text("Admin Dashboard")
+    page.goto(f"{BASE_URL}/api/auth/account/")
+    expect(page.locator("body")).to_contain_text("Admin")
 
 def test_admin_can_access_moderation(page: Page):
     login(page, "admin1", "wriug-7qo$ab-9mqwoy")

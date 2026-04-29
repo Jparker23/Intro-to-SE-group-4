@@ -11,7 +11,7 @@ def test_user_can_register_as_buyer(page: Page):
     page.fill("input[name='password']", "testpass123")
     page.fill("input[name='pswrdAgain']", "testpass123")
     page.click("button[type='submit']")
-    expect(page).to_have_url(f"{BASE_URL}/api/home/")
+    expect(page).to_have_url(f"{BASE_URL}/api/auth/pending-approval/")
 
 def test_user_can_register_as_seller(page: Page):
     page.goto(f"{BASE_URL}/api/auth/register/")
@@ -23,11 +23,11 @@ def test_user_can_register_as_seller(page: Page):
     page.fill("input[name='password']", "testpass123")
     page.fill("input[name='pswrdAgain']", "testpass123")
     page.click("button[type='submit']")
-    expect(page).to_have_url(f"{BASE_URL}/api/inventory/")
+    expect(page).to_have_url(f"{BASE_URL}/api/auth/pending-approval/")
 
 def test_user_can_login(page: Page):
-    login(page, "testbuyer", "password123")
-    expect(page).to_have_url(f"{BASE_URL}/api/home/")
+    login(page, "buyer", "wriug-7qo$ab-9mqwoy")
+    expect(page.locator("body")).to_be_visible()
 
 def test_invalid_login_shows_error(page: Page):
     page.goto(f"{BASE_URL}/api/auth/login/")

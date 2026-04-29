@@ -4,7 +4,7 @@ from decimal import Decimal
 from accounts.models import User
 from django.utils import timezone
 from shop.models import (
-    Product, Cart, CartItem, Category, Address, Order, OrderItem,
+    Product, Cart, CartItem, Category, ShippingOption, Address, Order, OrderItem,
     Payment, Payout, Fee,
 )
 
@@ -124,6 +124,16 @@ def saved_payment(db, buyer):
         payment_status="Pending",
     )
 
+@pytest.fixture
+def standard_shipping(db):
+    return ShippingOption.objects.create(
+        name="Standard Shipping",
+        code="standard",
+        description="Standard delivery",
+        base_price=Decimal("6.99"),
+        estimated_days="3-5 business days",
+        is_active=True,
+    )
 
 @pytest.mark.django_db
 def test_buyer_can_view_catalog(client, buyer, singer1_vinyl):
@@ -333,7 +343,7 @@ def test_buyer_can_view_checkout_page_with_cart_items(client, buyer, singer1_vin
 
 
 @pytest.mark.django_db
-def test_checkout_with_default_address_and_saved_payment_creates_order(client, buyer, buyer_address, saved_payment, singer1_vinyl):
+def test_checkout_with_default_address_and_saved_payment_creates_order(client, buyer, buyer_address, saved_payment, singer1_vinyl, standard_shipping):
     client.force_login(buyer)
 
     client.post(reverse("cart:add_to_cart", args=[singer1_vinyl.pk]), {"quantity": 1})
@@ -344,6 +354,7 @@ def test_checkout_with_default_address_and_saved_payment_creates_order(client, b
             "saved_address": str(buyer_address.pk),
             "saved_payment": str(saved_payment.pk),
             "payment_method": "CreditCard",
+            "shipping_option": standard_shipping.code,
         },
     )
 
@@ -363,7 +374,7 @@ def test_checkout_with_default_address_and_saved_payment_creates_order(client, b
 
 
 @pytest.mark.django_db
-def test_checkout_clears_cart_after_order(client, buyer, buyer_address, saved_payment, singer1_vinyl):
+def test_checkout_clears_cart_after_order(client, buyer, buyer_address, saved_payment, singer1_vinyl,standard_shipping):
     client.force_login(buyer)
 
     client.post(
@@ -377,6 +388,7 @@ def test_checkout_clears_cart_after_order(client, buyer, buyer_address, saved_pa
             "saved_address": str(buyer_address.pk),
             "saved_payment": str(saved_payment.pk),
             "payment_method": "CreditCard",
+            "shipping_option": standard_shipping.code,
         },
     )
 
@@ -385,7 +397,7 @@ def test_checkout_clears_cart_after_order(client, buyer, buyer_address, saved_pa
 
 
 @pytest.mark.django_db
-def test_checkout_can_create_new_address_if_none_selected(client, buyer, singer1_vinyl):
+def test_checkout_can_create_new_address_if_none_selected(client, buyer, singer1_vinyl, standard_shipping):
     client.force_login(buyer)
 
     client.post(reverse("cart:add_to_cart", args=[singer1_vinyl.pk]), {"quantity": 1})
@@ -406,6 +418,7 @@ def test_checkout_can_create_new_address_if_none_selected(client, buyer, singer1
             "card_number": "1111111111111111",
             "exp_month": "04",
             "exp_year": "2026",
+            "shipping_option": standard_shipping.code,
         },
     )
 
@@ -415,7 +428,7 @@ def test_checkout_can_create_new_address_if_none_selected(client, buyer, singer1
 
 
 @pytest.mark.django_db
-def test_checkout_requires_payment_method(client, buyer, buyer_address, singer1_vinyl):
+def test_checkout_requires_payment_method(client, buyer, buyer_address, singer1_vinyl, standard_shipping):
     client.force_login(buyer)
 
     client.post(reverse("cart:add_to_cart", args=[singer1_vinyl.pk]), {"quantity": 1})
@@ -424,6 +437,7 @@ def test_checkout_requires_payment_method(client, buyer, buyer_address, singer1_
         reverse("checkout"),
         {
             "saved_address": str(buyer_address.pk),
+            "shipping_option": standard_shipping.code,
         },
     )
 
@@ -432,7 +446,7 @@ def test_checkout_requires_payment_method(client, buyer, buyer_address, singer1_
 
 
 @pytest.mark.django_db
-def test_checkout_requires_address_fields_when_no_saved_address_selected(client, buyer, singer1_vinyl):
+def test_checkout_requires_address_fields_when_no_saved_address_selected(client, buyer, singer1_vinyl, standard_shipping):
     client.force_login(buyer)
     client.post(reverse("cart:add_to_cart", args=[singer1_vinyl.pk]), {"quantity": 1})
 
@@ -445,6 +459,7 @@ def test_checkout_requires_address_fields_when_no_saved_address_selected(client,
             "card_number": "4111111111111111",
             "exp_month": "04",
             "exp_year": "2026",
+            "shipping_option": standard_shipping.code,
         },
     )
 
@@ -454,7 +469,7 @@ def test_checkout_requires_address_fields_when_no_saved_address_selected(client,
 
 @pytest.mark.django_db
 def test_order_item_keeps_price_at_purchase_after_product_price_changes(
-    client, buyer, buyer_address, saved_payment, singer1_vinyl
+    client, buyer, buyer_address, saved_payment, singer1_vinyl, standard_shipping
 ):
     client.force_login(buyer)
     original_price = singer1_vinyl.price
@@ -466,6 +481,7 @@ def test_order_item_keeps_price_at_purchase_after_product_price_changes(
             "saved_address": str(buyer_address.pk),
             "saved_payment": str(saved_payment.pk),
             "payment_method": "CreditCard",
+            "shipping_option": standard_shipping.code,
         },
     )
 
@@ -480,7 +496,7 @@ def test_order_item_keeps_price_at_purchase_after_product_price_changes(
 
 
 @pytest.mark.django_db
-def test_checkout_creates_fee_and_paid_payout(client, buyer, buyer_address, saved_payment, singer1_vinyl):
+def test_checkout_creates_fee_and_paid_payout(client, buyer, buyer_address, saved_payment, singer1_vinyl, standard_shipping):
     client.force_login(buyer)
     client.post(reverse("cart:add_to_cart", args=[singer1_vinyl.pk]), {"quantity": 1})
 
@@ -490,6 +506,7 @@ def test_checkout_creates_fee_and_paid_payout(client, buyer, buyer_address, save
             "saved_address": str(buyer_address.pk),
             "saved_payment": str(saved_payment.pk),
             "payment_method": "CreditCard",
+            "shipping_option": standard_shipping.code,
         },
     )
 
@@ -507,7 +524,7 @@ def test_checkout_creates_fee_and_paid_payout(client, buyer, buyer_address, save
 
 @pytest.mark.django_db
 def test_order_history_remains_after_product_is_delisted(
-    client, buyer, buyer_address, saved_payment, singer1_vinyl
+    client, buyer, buyer_address, saved_payment, singer1_vinyl, standard_shipping
 ):
     client.force_login(buyer)
 
@@ -518,6 +535,7 @@ def test_order_history_remains_after_product_is_delisted(
             "saved_address": str(buyer_address.pk),
             "saved_payment": str(saved_payment.pk),
             "payment_method": "CreditCard",
+            "shipping_option": standard_shipping.code,
         },
     )
 

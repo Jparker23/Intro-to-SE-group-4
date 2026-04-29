@@ -328,7 +328,9 @@ def delistProd(request, pk):
     product = get_object_or_404(Product, pk=pk, seller=request.user, deleted_at__isnull=True)
     if request.method == "POST":
          product.deleted_at = timezone.now()
-         product.save(update_fields=["deleted_at"])
+         product.is_active = False 
+         product.orbit_int = False  
+         product.save(update_fields=["deleted_at", "is_active", "orbit_int"])
     create_audit_log( request, action="SELLER_DELISTED_PRODUCT", details=f"{product.name}", target_type="Product", target_id=product.pk, )
     return redirect("sellerInventory")
 

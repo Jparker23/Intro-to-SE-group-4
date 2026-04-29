@@ -1,0 +1,69 @@
+name: Django CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, staging, testing]
+  pull_request:
+    branches: [main, staging, testing]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app
+
+    env:
+      SECRET_KEY: test-secret-key
+      DEBUG: True
+      ALLOWED_HOSTS: 127.0.0.1,localhost
+      MEDIA_ROOT: /tmp/media
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-django pytest-playwright playwright
+
+      - name: Install Playwright browsers
+        run: |
+          playwright install --with-deps
+
+      - name: Create media directory
+        run: |
+          mkdir -p /tmp/media
+
+      - name: Run migrations
+        run: |
+          python manage.py migrate
+
+      - name: Collect static files
+        run: |
+          python manage.py collectstatic --noinput
+
+      - name: Seed database
+        run: |
+          python manage.py seed
+
+      - name: Start Django server
+        run: |
+          python manage.py runserver 127.0.0.1:8000 &
+
+      - name: Wait for server
+        run: |
+          sleep 5
+
+      - name: Run tests
+        run: |
+          pytest

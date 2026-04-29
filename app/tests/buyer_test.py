@@ -131,7 +131,6 @@ def standard_shipping(db):
         code="standard",
         description="Standard delivery",
         base_price=Decimal("6.99"),
-        estimated_days="3-5 business days",
         is_active=True,
     )
 

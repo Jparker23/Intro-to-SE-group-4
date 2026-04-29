@@ -138,7 +138,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 AUTH_USER_MODEL = "accounts.User"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = "/var/data/media"
+MEDIA_ROOT = os.environ.get("MEDIA_ROOT", "/var/data/media")
 
 
 #this is so users get a email when their accounts are approved!
